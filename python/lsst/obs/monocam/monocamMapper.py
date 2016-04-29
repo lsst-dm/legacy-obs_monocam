@@ -48,6 +48,21 @@ class MonocamMapper(CameraMapper):
 
         CameraMapper.__init__(self, policy, policyFile.getRepositoryPath(), **kwargs)
 
+        # Ensure each dataset type of interest knows about the full range of keys available from the registry
+        keys = {'visit': int,
+                'ccd': int,
+                'filter': str,
+                'date': str,
+                'dateObs': str,
+                'expTime': float,
+                'object': str
+        }
+        for name in ("raw",
+                     # processCcd outputs
+                     "postISRCCD", "calexp", "postISRCCD", "src", "icSrc", "srcMatch",
+                     ):
+            self.mappings[name].keyDict.update(keys)
+
         # @merlin, you should swap these out for the filters you actually intend to use.
         self.filterIdMap = {
                 'u': 0, 'g': 1, 'r': 2, 'i': 3, 'z': 4, 'y': 5, 'i2': 5}
@@ -59,6 +74,7 @@ class MonocamMapper(CameraMapper):
         afwImageUtils.defineFilter('i', 752.06)
         afwImageUtils.defineFilter('z', 866.85)
         afwImageUtils.defineFilter('y', 971.68, alias=['y4']) # official y filter
+        afwImageUtils.defineFilter('NONE', 0.0, alias=['no_filter'])
 
     def _extractDetectorName(self, dataId):
         return "0"
