@@ -1,28 +1,27 @@
-from lsst.obs.monocam.ingest import MonocamParseTask
+from lsst.obs.monocam.ingest import MonocamParseTask, MonocamRegisterTask
 config.parse.retarget(MonocamParseTask)
+config.register.retarget(MonocamRegisterTask)
 
 config.parse.hdu = 1
-
-config.parse.translation = {'visit'  : 'EXPNUM',
-                            'taiObs' : 'DATE-OBS', 
-                            'dateObs' : 'DATE-OBS', 
-                            'expTime': 'EXPTIME',
-                            'filter' : 'FILTER',
-                            'object' : 'IMGTYPE',
-			    'date'   : 'DATE',
-                          }
+config.parse.translation = {
+    'date': 'DATE-OBS',
+    'expTime': 'EXPTIME',
+    'object': 'IMGTYPE',
+}
 
 config.parse.translators = {
+    'visit': 'translate_visit',
     'ccd': 'translate_ccd',
-                          }
+    'filter': 'translate_filter',
+}
 
-
-config.register.columns = {'visit':    'int',
-                           'filter':   'text',
-                           'date':     'text',
-                           'dateObs':   'text',
-                           'expTime':  'double',
-                           'ccd':      'int',
-                           'object':   'text',
-                           #'hdu':      'int',
-                         }
+config.register.columns = {
+    'visit': 'int',
+    'basename': 'text',
+    'filter': 'text',
+    'date': 'text',
+    'expTime': 'double',
+    'ccd': 'int',
+    'object': 'text',
+}
+config.register.visit = config.register.columns.keys()

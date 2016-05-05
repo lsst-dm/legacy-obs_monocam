@@ -24,6 +24,7 @@ import os
 
 import lsst.utils
 import lsst.afw.image.utils as afwImageUtils
+import lsst.afw.image as afwImage
 from lsst.daf.butlerUtils import CameraMapper
 import lsst.pex.policy as pexPolicy
 from .monocam import Monocam
@@ -36,16 +37,6 @@ class MonocamMapper(CameraMapper):
     def __init__(self, inputPolicy=None, **kwargs):
         policyFile = pexPolicy.DefaultPolicyFile(self.packageName, "monocamMapper.paf", "policy")
         policy = pexPolicy.Policy(policyFile)
-
-        # Not sure about this, cargo culted
-        self.doFootprints = False
-        if inputPolicy is not None:
-            for kw in inputPolicy.paramNames(True):
-                if kw == "doFootprints":
-                    self.doFootprints = True
-                else:
-                    kwargs[kw] = inputPolicy.get(kw)
-
         CameraMapper.__init__(self, policy, policyFile.getRepositoryPath(), **kwargs)
 
         # Ensure each dataset type of interest knows about the full range of keys available from the registry
@@ -53,11 +44,10 @@ class MonocamMapper(CameraMapper):
                 'ccd': int,
                 'filter': str,
                 'date': str,
-                'dateObs': str,
                 'expTime': float,
-                'object': str
+                'object': str,
         }
-        for name in ("raw",
+        for name in ("raw", "raw_amp",
                      # processCcd outputs
                      "postISRCCD", "calexp", "postISRCCD", "src", "icSrc", "srcMatch",
                      ):
@@ -115,3 +105,59 @@ class MonocamMapper(CameraMapper):
     def _defectLookup(self, dataId):
         # Evidently this gets called first
         return "hack"
+
+    def bypass_raw(self, datasetType, pythonType, location, dataId):
+        filename = location.getLocations()[0]
+        md = afwImage.readMetadata(filename, 1)  # 1 = PHU
+        image = afwImage.DecoratedImageU(filename)
+        image.setMetadata(md)
+        return self.std_raw(image, dataId)
+
+    def bypass_raw_md(self, datasetType, pythonType, location, dataId):
+        filename = location.getLocations()[0]
+        return afwImage.readMetadata(filename, 1)  # 1 = PHU
+
+    bypass_raw_amp = bypass_raw
+    bypass_raw_amp_md = bypass_raw_md
+
+
+    def standardizeCalib(self, dataset, item, dataId):
+        """Standardize a calibration image read in by the butler
+
+        Some calibrations are stored on disk as Images instead of MaskedImages
+        or Exposures.  Here, we convert it to an Exposure.
+
+        @param dataset  Dataset type (e.g., "bias", "dark" or "flat")
+        @param item  The item read by the butler
+        @param dataId  The data identifier (unused, included for future flexibility)
+        @return standardized Exposure
+        """
+        mapping = self.calibrations[dataset]
+        if "MaskedImage" in mapping.python:
+            exp = afwImage.makeExposure(item)
+        elif "Image" in mapping.python:
+            if hasattr(item, "getImage"): # For DecoratedImageX
+                item = item.getImage()
+            exp = afwImage.makeExposure(afwImage.makeMaskedImage(item))
+        elif "Exposure" in mapping.python:
+            exp = item
+        else:
+            raise RuntimeError("Unrecognised python type: %s" % mapping.python)
+
+        if hasattr(CameraMapper, "std_" + dataset):
+            return getattr(parent, "std_" + dataset)(self, exp, dataId)
+        return self._standardizeExposure(mapping, exp, dataId)
+
+    def std_bias(self, item, dataId):
+        return self.standardizeCalib("bias", item, dataId)
+
+    def std_dark(self, item, dataId):
+        exp = self.standardizeCalib("dark", item, dataId)
+        exp.getCalib().setExptime(1.0)
+        return exp
+
+    def std_flat(self, item, dataId):
+        return self.standardizeCalib("flat", item, dataId)
+
+    def std_fringe(self, item, dataId):
+        return self.standardizeCalib("flat", item, dataId)

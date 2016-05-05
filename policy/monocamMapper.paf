@@ -2,7 +2,7 @@
 
 defects:    "../description/defects"
 
-needCalibRegistry: false
+needCalibRegistry: true
 
 levels: {
     tract: "patch"
@@ -15,39 +15,23 @@ defaultSubLevels: {
 
 exposures: {
     raw: {
-        template:    "raw/raw_v%(visit)d_f%(filter)s.fits.gz"
-        python:     "lsst.afw.image.ExposureU"
-        persistable: "ExposureU"
+        template:    "raw/%(object)s/%(filter)s/%(basename)s.fits"
+        python:     "lsst.afw.image.DecoratedImageU"
+        persistable: "DecoratedImageU"
         storage:     "FitsStorage"
         level:        "Ccd"
         tables:        raw
     }
     raw_amp: {
-        template:    "raw/raw_v%(visit)d_f%(filter)s.fits.gz[%(channel)d]"
-        python:     "lsst.afw.image.ExposureU"
-        persistable:         "ExposureU"
+        template:    "raw/%(object)s/%(filter)s/%(basename)s.fits[%(channel)d]"
+        python:     "lsst.afw.image.DecoratedImageU"
+        persistable:         "DecoratedImageU"
         storage:     "FitsStorage"
         level:        "Amp"
         tables:        raw
     }
     postISRCCD: {
         template:    "postISRCCD/postISRCCD_v%(visit)d_f%(filter)s.fits"
-        python:        "lsst.afw.image.ExposureF"
-        persistable:        "ExposureF"
-        storage:    "FitsStorage"
-        level:        "Ccd"
-        tables:        raw
-    }
-    crDiffim: {
-        template:    "crDiffim/crDiffim_v%(visit)d_f%(filter)s.fits"
-        python:        "lsst.afw.image.ExposureF"
-        persistable:        "ExposureF"
-        storage:    "FitsStorage"
-        level:        "Ccd"
-        tables:        raw
-    }
-    visitim: {
-        template:      "visitim/visitim_v%(visit)d_f%(filter)s.fits"
         python:        "lsst.afw.image.ExposureF"
         persistable:        "ExposureF"
         storage:    "FitsStorage"
@@ -92,36 +76,73 @@ exposures: {
 
 calibrations: {
     bias: {
-        template:    "bias/bias.fits.gz"
-        python:        "lsst.afw.image.ExposureF"
-        persistable:        "ExposureF"
-        storage:    "FitsStorage"
-        level:        "Ccd"
+        template:    "bias/%(calibDate)s/bias-%(calibDate)s.fits.gz"
+        python:      "lsst.afw.image.DecoratedImageF"
+        persistable: "DecoratedImageF"
+        storage:     "FitsStorage"
+        level:       "Ccd"
+        tables:      "bias"
+        columns:     "date"
+        obsTimeName: "date"
+        reference:   "raw_visit"
+        refCols:     "visit"
+        refCols:     "filter"
+        validRange:  true
+        validStartName: validStart
+        validEndName: validEnd
     }
     dark: {
-        template:    "dark/dark.fits.gz"
-        python:        "lsst.afw.image.ExposureF"
-        persistable:        "ExposureF"
-        storage:    "FitsStorage"
-        level:        "Ccd"
+        template:    "dark/%(calibDate)s/dark-%(calibDate)s.fits.gz"
+        python:      "lsst.afw.image.DecoratedImageF"
+        persistable: "DecoratedImageF"
+        storage:     "FitsStorage"
+        level:       "Ccd"
+        tables:      "bias"
+        columns:     "date"
+        obsTimeName: "date"
+        reference:   "raw_visit"
+        refCols:     "visit"
+        refCols:     "filter"
+        validRange:  true
+        validStartName: validStart
+        validEndName: validEnd
+
     }
     flat: {
-        template:    "flat/flat_f%(filter)s.fits.gz"
-        python:        "lsst.afw.image.ExposureF"
-        persistable:        "ExposureF"
-        storage:    "FitsStorage"
-        level:        "Ccd"
-        reference:    "raw"
-        columns:      "filter"
+        template:    "flat/%(filter)s/%(calibDate)s/flat_%(filter)s_%(calibDate)s.fits.gz"
+        python:      "lsst.afw.image.DecoratedImageF"
+        persistable: "DecoratedImageF"
+        storage:     "FitsStorage"
+        level:       "Ccd"
+        tables:      "flat"
+        columns:     "filter"
+        columns:     "date"
+        obsTimeName: "date"
+        reference:   "raw_visit"
+        refCols:     "visit"
+        refCols:     "filter"
+        filter:      true
+        validRange:  true
+        validStartName: validStart
+        validEndName: validEnd
     }
     fringe: {
-        template:    "fringe/fringe_f%(filter)s.fits.gz"
-        python:        "lsst.afw.image.ExposureF"
-        persistable:        "ExposureF"
-        storage:    "FitsStorage"
-        level:        "Ccd"
-        reference:    "raw"
-        columns:      "filter"
+        template:    "fringe/%(filter)s/%(calibDate)s/fringe_%(filter)s_%(calibDate)s.fits.gz"
+        python:      "lsst.afw.image.MaskedImageF"
+        persistable: "MaskedImageF"
+        storage:     "FitsStorage"
+        level:       "Ccd"
+        tables:      "flat"
+        columns:     "filter"
+        columns:     "date"
+        obsTimeName: "date"
+        reference:   "raw_visit"
+        refCols:     "visit"
+        refCols:     "filter"
+        filter:      true
+        validRange:  true
+        validStartName: validStart
+        validEndName: validEnd
     }
 }
 
@@ -436,36 +457,36 @@ datasets: {
         storage:    "FitsCatalogStorage"
         tables:        raw
     }
-	bias_config: {
-		template: "config/bias.py"
-		python: "lsst.pipe.drivers.constructCalibs.BiasConfig"
-		persistable: "Config"
-		storage: "ConfigStorage"
-		tables: raw
-		tables: raw_visit
-	}
-	dark_config: {
-		template: "config/dark.py"
-		python: "lsst.pipe.drivers.constructCalibs.DarkConfig"
-		persistable: "Config"
-		storage: "ConfigStorage"
-		tables: raw
-		tables: raw_visit
-	}
-	flat_config: {
-		template: "config/flat.py"
-		python: "lsst.pipe.drivers.constructCalibs.FlatConfig"
-		persistable: "Config"
-		storage: "ConfigStorage"
-		tables: raw
-		tables: raw_visit
-	}
-	fringe_config: {
-		template: "config/fringe.py"
-		python: "lsst.pipe.drivers.constructCalibs.FringeConfig"
-		persistable: "Config"
-		storage: "ConfigStorage"
-		tables: raw
-		tables: raw_visit
-	}
+    bias_config: {
+        template: "config/bias.py"
+        python: "lsst.pipe.drivers.constructCalibs.BiasConfig"
+        persistable: "Config"
+        storage: "ConfigStorage"
+        tables: raw
+        tables: raw_visit
+    }
+    dark_config: {
+        template: "config/dark.py"
+        python: "lsst.pipe.drivers.constructCalibs.DarkConfig"
+        persistable: "Config"
+        storage: "ConfigStorage"
+        tables: raw
+        tables: raw_visit
+    }
+    flat_config: {
+        template: "config/flat.py"
+        python: "lsst.pipe.drivers.constructCalibs.FlatConfig"
+        persistable: "Config"
+        storage: "ConfigStorage"
+        tables: raw
+        tables: raw_visit
+    }
+    fringe_config: {
+        template: "config/fringe.py"
+        python: "lsst.pipe.drivers.constructCalibs.FringeConfig"
+        persistable: "Config"
+        storage: "ConfigStorage"
+        tables: raw
+        tables: raw_visit
+    }
 }
