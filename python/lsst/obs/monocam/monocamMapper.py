@@ -28,6 +28,7 @@ import lsst.afw.image as afwImage
 from lsst.daf.butlerUtils import CameraMapper
 import lsst.pex.policy as pexPolicy
 from .monocam import Monocam
+from .hack import getDatabase, fakeWcs
 
 __all__ = ["MonocamMapper"]
 
@@ -38,6 +39,8 @@ class MonocamMapper(CameraMapper):
         policyFile = pexPolicy.DefaultPolicyFile(self.packageName, "monocamMapper.paf", "policy")
         policy = pexPolicy.Policy(policyFile)
         CameraMapper.__init__(self, policy, policyFile.getRepositoryPath(), **kwargs)
+
+        getDatabase(kwargs["root"])
 
         # Ensure each dataset type of interest knows about the full range of keys available from the registry
         keys = {'visit': int,
@@ -59,12 +62,12 @@ class MonocamMapper(CameraMapper):
 
         # The LSST Filters from L. Jones 04/07/10
         afwImageUtils.defineFilter('u', 364.59)
-        afwImageUtils.defineFilter('g', 476.31)
-        afwImageUtils.defineFilter('r', 619.42)
-        afwImageUtils.defineFilter('i', 752.06)
-        afwImageUtils.defineFilter('z', 866.85)
+        afwImageUtils.defineFilter('g', 476.31, alias=["SDSSG"])
+        afwImageUtils.defineFilter('r', 619.42, alias=["SDSSR"])
+        afwImageUtils.defineFilter('i', 752.06, alias=["SDSSI"])
+        afwImageUtils.defineFilter('z', 866.85, alias=["SDSSZ"])
         afwImageUtils.defineFilter('y', 971.68, alias=['y4']) # official y filter
-        afwImageUtils.defineFilter('NONE', 0.0, alias=['no_filter'])
+        afwImageUtils.defineFilter('NONE', 0.0, alias=['no_filter', "OPEN"])
 
     def _extractDetectorName(self, dataId):
         return "0"
@@ -108,14 +111,18 @@ class MonocamMapper(CameraMapper):
 
     def bypass_raw(self, datasetType, pythonType, location, dataId):
         filename = location.getLocations()[0]
-        md = afwImage.readMetadata(filename, 1)  # 1 = PHU
+        md = self.bypass_raw_md(datasetType, pythonType, location, dataId)
         image = afwImage.DecoratedImageU(filename)
         image.setMetadata(md)
         return self.std_raw(image, dataId)
 
     def bypass_raw_md(self, datasetType, pythonType, location, dataId):
         filename = location.getLocations()[0]
-        return afwImage.readMetadata(filename, 1)  # 1 = PHU
+        md = afwImage.readMetadata(filename, 1)  # 1 = PHU
+        wcs = fakeWcs(md).getFitsMetadata()
+        for key in wcs.names():
+            md.set(key, wcs.get(key))
+        return md
 
     bypass_raw_amp = bypass_raw
     bypass_raw_amp_md = bypass_raw_md
