@@ -10,3 +10,5 @@
 .sconsign.dblite
 config.log
 tests/.tests
+ups/obs_monocam.cfgc
+bin/
