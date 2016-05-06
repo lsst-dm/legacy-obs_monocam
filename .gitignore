@@ -1,0 +1,15 @@
+*.dylib
+*.o
+*.os
+*.pyc
+*.so
+*~
+#*
+*#
+.sconf_temp
+.sconsign.dblite
+config.log
+tests/.tests
+python/lsst/obs/monocam/version.py
+ups/obs_monocam.cfgc
+bin/
