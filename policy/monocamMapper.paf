@@ -15,17 +15,17 @@ defaultSubLevels: {
 
 exposures: {
     raw: {
-        template:    "raw/raw_v%(visit)d_f%(filter)s.fits.gz"
-        python:     "lsst.afw.image.ExposureU"
-        persistable: "ExposureU"
+        template:    "raw/%(object)s/%(filter)s/%(basename)s.fits"
+        python:     "lsst.afw.image.DecoratedImageU"
+        persistable: "DecoratedImageU"
         storage:     "FitsStorage"
         level:        "Ccd"
         tables:        raw
     }
     raw_amp: {
-        template:    "raw/raw_v%(visit)d_f%(filter)s.fits.gz[%(channel)d]"
-        python:     "lsst.afw.image.ExposureU"
-        persistable:         "ExposureU"
+        template:    "raw/%(object)s/%(filter)s/%(basename)s.fits[%(channel)d]"
+        python:     "lsst.afw.image.DecoratedImageU"
+        persistable:         "DecoratedImageU"
         storage:     "FitsStorage"
         level:        "Amp"
         tables:        raw
