@@ -24,9 +24,11 @@ import os
 
 import lsst.utils
 import lsst.afw.image.utils as afwImageUtils
+import lsst.afw.image as afwImage
 from lsst.daf.butlerUtils import CameraMapper
 import lsst.pex.policy as pexPolicy
 from .monocam import Monocam
+from .hack import getDatabase, fakeWcs
 
 __all__ = ["MonocamMapper"]
 
@@ -48,17 +50,34 @@ class MonocamMapper(CameraMapper):
 
         CameraMapper.__init__(self, policy, policyFile.getRepositoryPath(), **kwargs)
 
+        getDatabase(kwargs["root"])
+
+        # Ensure each dataset type of interest knows about the full range of keys available from the registry
+        keys = {'visit': int,
+                'ccd': int,
+                'filter': str,
+                'date': str,
+                'expTime': float,
+                'object': str,
+        }
+        for name in ("raw", "raw_amp",
+                     # processCcd outputs
+                     "postISRCCD", "calexp", "postISRCCD", "src", "icSrc", "srcMatch",
+                     ):
+            self.mappings[name].keyDict.update(keys)
+
         # @merlin, you should swap these out for the filters you actually intend to use.
         self.filterIdMap = {
                 'u': 0, 'g': 1, 'r': 2, 'i': 3, 'z': 4, 'y': 5, 'i2': 5}
 
         # The LSST Filters from L. Jones 04/07/10
         afwImageUtils.defineFilter('u', 364.59)
-        afwImageUtils.defineFilter('g', 476.31)
-        afwImageUtils.defineFilter('r', 619.42)
-        afwImageUtils.defineFilter('i', 752.06)
-        afwImageUtils.defineFilter('z', 866.85)
+        afwImageUtils.defineFilter('g', 476.31, alias=["SDSSG"])
+        afwImageUtils.defineFilter('r', 619.42, alias=["SDSSR"])
+        afwImageUtils.defineFilter('i', 752.06, alias=["SDSSI"])
+        afwImageUtils.defineFilter('z', 866.85, alias=["SDSSZ"])
         afwImageUtils.defineFilter('y', 971.68, alias=['y4']) # official y filter
+        afwImageUtils.defineFilter('NONE', 0.0, alias=['no_filter', "OPEN"])
 
     def _extractDetectorName(self, dataId):
         return "0"
@@ -99,3 +118,65 @@ class MonocamMapper(CameraMapper):
     def _defectLookup(self, dataId):
         # Evidently this gets called first
         return "hack"
+
+    def bypass_raw(self, datasetType, pythonType, location, dataId):
+        """Read raw image with hacked metadata"""
+        filename = location.getLocations()[0]
+        md = self.bypass_raw_md(datasetType, pythonType, location, dataId)
+        image = afwImage.DecoratedImageU(filename)
+        image.setMetadata(md)
+        return self.std_raw(image, dataId)
+
+    def bypass_raw_md(self, datasetType, pythonType, location, dataId):
+        """Read metadata for raw image, adding fake Wcs"""
+        filename = location.getLocations()[0]
+        md = afwImage.readMetadata(filename, 1)  # 1 = PHU
+        wcs = fakeWcs(md).getFitsMetadata()
+        for key in wcs.names():
+            md.set(key, wcs.get(key))
+        return md
+
+    bypass_raw_amp = bypass_raw
+    bypass_raw_amp_md = bypass_raw_md
+
+
+    def standardizeCalib(self, dataset, item, dataId):
+        """Standardize a calibration image read in by the butler
+
+        Some calibrations are stored on disk as Images instead of MaskedImages
+        or Exposures.  Here, we convert it to an Exposure.
+
+        @param dataset  Dataset type (e.g., "bias", "dark" or "flat")
+        @param item  The item read by the butler
+        @param dataId  The data identifier (unused, included for future flexibility)
+        @return standardized Exposure
+        """
+        mapping = self.calibrations[dataset]
+        if "MaskedImage" in mapping.python:
+            exp = afwImage.makeExposure(item)
+        elif "Image" in mapping.python:
+            if hasattr(item, "getImage"): # For DecoratedImageX
+                item = item.getImage()
+            exp = afwImage.makeExposure(afwImage.makeMaskedImage(item))
+        elif "Exposure" in mapping.python:
+            exp = item
+        else:
+            raise RuntimeError("Unrecognised python type: %s" % mapping.python)
+
+        if hasattr(CameraMapper, "std_" + dataset):
+            return getattr(parent, "std_" + dataset)(self, exp, dataId)
+        return self._standardizeExposure(mapping, exp, dataId)
+
+    def std_bias(self, item, dataId):
+        return self.standardizeCalib("bias", item, dataId)
+
+    def std_dark(self, item, dataId):
+        exp = self.standardizeCalib("dark", item, dataId)
+        exp.getCalib().setExptime(1.0)
+        return exp
+
+    def std_flat(self, item, dataId):
+        return self.standardizeCalib("flat", item, dataId)
+
+    def std_fringe(self, item, dataId):
+        return self.standardizeCalib("flat", item, dataId)
