@@ -22,6 +22,7 @@
 
 
 import lsst.afw.image.utils as afwImageUtils
+import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 from lsst.daf.butlerUtils import CameraMapper
 import lsst.pex.policy as pexPolicy
@@ -102,7 +103,12 @@ class MonocamMapper(CameraMapper):
 
     def bypass_defects(self, datasetType, pythonType, location, dataId):
         """ since we have no defects, return an empty list.  Fix this when defects exist """
-        return []
+        return [afwImage.DefectBase(afwGeom.Box2I(afwGeom.Point2I(x0, y0), afwGeom.Point2I(x1, y1))) for
+                x0, y0, x1, y1 in (
+                    # These may be hot pixels, but we'll treat them as bad until we can get more data
+                    (3801, 666, 3805, 669),
+                    (3934, 582, 3936, 589),
+                    )]
 
     def _defectLookup(self, dataId):
         """ This function needs to return a non-None value otherwise the mapper gives up
