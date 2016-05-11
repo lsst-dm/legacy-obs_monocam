@@ -1,7 +1,7 @@
-# 
+#
 # LSST Data Management System
-# Copyright 2008, 2009, 2010 LSST Corporation.
-# 
+# Copyright 2016 LSST Corporation.
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -9,26 +9,25 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-import os
 
-import lsst.utils
 import lsst.afw.image.utils as afwImageUtils
 from lsst.daf.butlerUtils import CameraMapper
 import lsst.pex.policy as pexPolicy
 from .monocam import Monocam
 
 __all__ = ["MonocamMapper"]
+
 
 class MonocamMapper(CameraMapper):
     packageName = 'obs_monocam'
@@ -37,20 +36,10 @@ class MonocamMapper(CameraMapper):
         policyFile = pexPolicy.DefaultPolicyFile(self.packageName, "monocamMapper.paf", "policy")
         policy = pexPolicy.Policy(policyFile)
 
-        # Not sure about this, cargo culted
-        self.doFootprints = False
-        if inputPolicy is not None:
-            for kw in inputPolicy.paramNames(True):
-                if kw == "doFootprints":
-                    self.doFootprints = True
-                else:
-                    kwargs[kw] = inputPolicy.get(kw)
-
         CameraMapper.__init__(self, policy, policyFile.getRepositoryPath(), **kwargs)
 
         # @merlin, you should swap these out for the filters you actually intend to use.
-        self.filterIdMap = {
-                'u': 0, 'g': 1, 'r': 2, 'i': 3, 'z': 4, 'y': 5, 'i2': 5}
+        self.filterIdMap = {'u': 0, 'g': 1, 'r': 2, 'i': 3, 'z': 4, 'y': 5}
 
         # The LSST Filters from L. Jones 04/07/10
         afwImageUtils.defineFilter('u', 364.59)
@@ -58,7 +47,7 @@ class MonocamMapper(CameraMapper):
         afwImageUtils.defineFilter('r', 619.42)
         afwImageUtils.defineFilter('i', 752.06)
         afwImageUtils.defineFilter('z', 866.85)
-        afwImageUtils.defineFilter('y', 971.68, alias=['y4']) # official y filter
+        afwImageUtils.defineFilter('y', 971.68, alias=['y4'])  # official y filter
 
     def _extractDetectorName(self, dataId):
         return "0"
@@ -97,5 +86,8 @@ class MonocamMapper(CameraMapper):
         return []
 
     def _defectLookup(self, dataId):
-        # Evidently this gets called first
+        """ This function needs to return a non-None value otherwise the mapper gives up
+        on trying to find the defects.  I wanted to be able to return a list of defects constructed
+        in code rather than reconstituted from persisted files, so I return a dummy value.
+        """
         return "hack"
