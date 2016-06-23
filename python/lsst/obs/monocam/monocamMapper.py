@@ -27,7 +27,6 @@ import lsst.afw.image as afwImage
 from lsst.obs.base import CameraMapper
 import lsst.pex.policy as pexPolicy
 from .monocam import Monocam
-from .hack import getDatabase, fakeWcs
 
 __all__ = ["MonocamMapper"]
 
@@ -48,6 +47,7 @@ class MonocamMapper(CameraMapper):
                 'date': str,
                 'expTime': float,
                 'object': str,
+                'imageType': str,
                 }
         for name in ("raw", "raw_amp",
                      # processCcd outputs

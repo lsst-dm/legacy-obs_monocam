@@ -4,6 +4,7 @@ config.parse.translation = {
     'expTime': 'EXPTIME',
     'object': 'OBJECT',
     'visit': 'VISIT',
+    'imageType': 'IMAGETYP',
     'filter': 'FILTER',
 }
 config.parse.translators = {
@@ -23,5 +24,6 @@ config.register.columns = {
     'expTime': 'double',
     'ccd': 'int',
     'object': 'text',
+    'imageType': 'text',
 }
 config.register.visit = list(config.register.columns.keys())
