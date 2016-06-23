@@ -1,5 +1,20 @@
-from lsst.obs.monocam.ingest import MonocamParseTask, HackParseTask, MonocamRegisterTask
-config.register.retarget(MonocamRegisterTask)  # Hack the visit numbers
+from lsst.obs.monocam.ingest import MonocamParseTask
+config.parse.retarget(MonocamParseTask)
+config.parse.translation = {
+    'expTime': 'EXPTIME',
+    'object': 'OBJECT',
+    'visit': 'VISIT',
+    'filter': 'FILTER',
+}
+config.parse.translators = {
+    'ccd': 'translate_ccd',
+    'date': 'translate_date',
+}
+config.parse.defaults = {
+    'object': "UNKNOWN",
+}
+config.parse.hdu = 1
+
 config.register.columns = {
     'visit': 'int',
     'basename': 'text',
@@ -10,23 +25,3 @@ config.register.columns = {
     'object': 'text',
 }
 config.register.visit = config.register.columns.keys()
-config.allowError = True  # Errors tend to happen a lot with this camera...
-
-if False:  # For lab data
-    config.parse.retarget(MonocamParseTask)
-    config.parse.hdu = 1
-    config.parse.translation = {
-        'date': 'DATE-OBS',
-        'expTime': 'EXPTIME',
-        'object': 'IMGTYPE',
-    }
-    config.parse.translators = {
-        'visit': 'translate_visit',
-        'ccd': 'translate_ccd',
-        'filter': 'translate_filter',
-    }
-    config.parse.defaults = {
-        'object': "UNKNOWN",
-    }
-else:  # For sky data
-    config.parse.retarget(HackParseTask)

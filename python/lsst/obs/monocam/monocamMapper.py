@@ -41,8 +41,6 @@ class MonocamMapper(CameraMapper):
 
         CameraMapper.__init__(self, policy, policyFile.getRepositoryPath(), **kwargs)
 
-        getDatabase(kwargs["root"])
-
         # Ensure each dataset type of interest knows about the full range of keys available from the registry
         keys = {'visit': int,
                 'ccd': int,
@@ -129,9 +127,6 @@ class MonocamMapper(CameraMapper):
         """Read metadata for raw image, adding fake Wcs"""
         filename = location.getLocations()[0]
         md = afwImage.readMetadata(filename, 1)  # 1 = PHU
-        wcs = fakeWcs(md).getFitsMetadata()
-        for key in wcs.names():
-            md.set(key, wcs.get(key))
         return md
 
     bypass_raw_amp = bypass_raw
