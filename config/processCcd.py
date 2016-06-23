@@ -17,12 +17,6 @@ config.charImage.background.useApprox = False
 config.charImage.detectAndMeasure.detection.background.useApprox = False
 config.calibrate.detectAndMeasure.detection.background.useApprox = False
 
-# These detectors are noisier than we claim they are in the variance map, so back off on the threshold
-# At the same time, we need all the stars we can get since it's a small telescope with short exposures...
-config.charImage.detectAndMeasure.detection.thresholdValue = 20
-config.charImage.detectAndMeasure.detection.includeThresholdMultiplier = 1.0
-config.calibrate.detectAndMeasure.detection.thresholdValue = 20
-config.calibrate.detectAndMeasure.detection.includeThresholdMultiplier = 1.0
 
 if False:
     # we don't have astrometry_net data (yet) so astrom and photo cal are impossible
