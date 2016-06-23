@@ -99,6 +99,13 @@ class MonocamIsrTask(ip_isr.IsrTask):
 
         ccdExposure.getCalib().setFluxMag0(self.config.fluxMag0T1 * ccdExposure.getCalib().getExptime())
 
+        import lsst.afw.image as afwImage
+        from lsst.afw.geom import Point2D
+        print "HACKING!"
+        crval = ccdExposure.getWcs().getSkyOrigin()
+        ccdExposure.setWcs(afwImage.makeWcs(crval, Point2D(2159, 1870),
+                   -4.24102702480487E-05, -0.000102403034354112, 0.000102426827699895, -4.2440476163963E-05))
+
         return pipe_base.Struct(
             exposure = ccdExposure,
         )
