@@ -6,6 +6,10 @@ config.isr.doFlat = True
 config.isr.doFringe = False
 config.isr.doLinearize = False
 
+config.charImage.repair.doCosmicRay = False
+config.charImage.repair.cosmicray.nCrPixelMax = 1000000
+
+
 config.charImage.background.binSize = 128
 config.charImage.detectAndMeasure.detection.background.binSize = 128
 config.calibrate.detectAndMeasure.detection.background.binSize = 128
