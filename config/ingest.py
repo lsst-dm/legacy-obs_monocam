@@ -30,5 +30,3 @@ if False:  # For lab data
     }
 else:  # For sky data
     config.parse.retarget(HackParseTask)
-
-

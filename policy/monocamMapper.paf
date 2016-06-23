@@ -38,22 +38,6 @@ exposures: {
         level:        "Ccd"
         tables:        raw
     }
-    crDiffim: {
-        template:    "crDiffim/crDiffim_v%(visit)d_f%(filter)s.fits"
-        python:        "lsst.afw.image.ExposureF"
-        persistable:        "ExposureF"
-        storage:    "FitsStorage"
-        level:        "Ccd"
-        tables:        raw
-    }
-    visitim: {
-        template:      "visitim/visitim_v%(visit)d_f%(filter)s.fits"
-        python:        "lsst.afw.image.ExposureF"
-        persistable:        "ExposureF"
-        storage:    "FitsStorage"
-        level:        "Ccd"
-        tables:        raw
-    }
     icExp: {
         template:      "icExp/icExp_v%(visit)d_f%(filter)s.fits"
         python:        "lsst.afw.image.ExposureF"
@@ -255,20 +239,6 @@ datasets: {
         python:        "lsst.afw.math.BackgroundList"
         persistable:   "PurePythonClass"
         storage:       "FitsCatalogStorage"
-        tables:        raw
-    }
-    crDiffimSrc: {
-        template:      "crDiffimSrc/v%(visit)d_f%(filter)s.fits"
-        python:        "lsst.afw.table.SourceCatalog"
-        persistable:        "SourceCatalog"
-        storage:    "FitsCatalogStorage"
-        tables:        raw
-    }
-    crDiffimSrc_schema: {
-        template:      "schema/crDiffSrc.fits"
-        python:        "lsst.afw.table.SourceCatalog"
-        persistable:        "SourceCatalog"
-        storage:    "FitsCatalogStorage"
         tables:        raw
     }
     icSrc: {

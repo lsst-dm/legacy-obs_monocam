@@ -1,7 +1,7 @@
-# 
+#
 # LSST Data Management System
-# Copyright 2008, 2009, 2010 LSST Corporation.
-# 
+# Copyright 2016 LSST Corporation.
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -9,21 +9,20 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-import os
 
-import lsst.utils
 import lsst.afw.image.utils as afwImageUtils
+import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 from lsst.daf.butlerUtils import CameraMapper
 import lsst.pex.policy as pexPolicy
@@ -32,21 +31,13 @@ from .hack import getDatabase, fakeWcs
 
 __all__ = ["MonocamMapper"]
 
+
 class MonocamMapper(CameraMapper):
     packageName = 'obs_monocam'
 
     def __init__(self, inputPolicy=None, **kwargs):
         policyFile = pexPolicy.DefaultPolicyFile(self.packageName, "monocamMapper.paf", "policy")
         policy = pexPolicy.Policy(policyFile)
-
-        # Not sure about this, cargo culted
-        self.doFootprints = False
-        if inputPolicy is not None:
-            for kw in inputPolicy.paramNames(True):
-                if kw == "doFootprints":
-                    self.doFootprints = True
-                else:
-                    kwargs[kw] = inputPolicy.get(kw)
 
         CameraMapper.__init__(self, policy, policyFile.getRepositoryPath(), **kwargs)
 
@@ -67,8 +58,7 @@ class MonocamMapper(CameraMapper):
             self.mappings[name].keyDict.update(keys)
 
         # @merlin, you should swap these out for the filters you actually intend to use.
-        self.filterIdMap = {
-                'u': 0, 'g': 1, 'r': 2, 'i': 3, 'z': 4, 'y': 5, 'i2': 5}
+        self.filterIdMap = {'u': 0, 'g': 1, 'r': 2, 'i': 3, 'z': 4, 'y': 5}
 
         # The LSST Filters from L. Jones 04/07/10
         afwImageUtils.defineFilter('u', 364.59)
@@ -76,7 +66,7 @@ class MonocamMapper(CameraMapper):
         afwImageUtils.defineFilter('r', 619.42, alias=["SDSSR"])
         afwImageUtils.defineFilter('i', 752.06, alias=["SDSSI"])
         afwImageUtils.defineFilter('z', 866.85, alias=["SDSSZ"])
-        afwImageUtils.defineFilter('y', 971.68, alias=['y4']) # official y filter
+        afwImageUtils.defineFilter('y', 971.68, alias=['y4'])  # official y filter
         afwImageUtils.defineFilter('NONE', 0.0, alias=['no_filter', "OPEN"])
 
     def _extractDetectorName(self, dataId):
@@ -113,10 +103,18 @@ class MonocamMapper(CameraMapper):
 
     def bypass_defects(self, datasetType, pythonType, location, dataId):
         """ since we have no defects, return an empty list.  Fix this when defects exist """
-        return []
+        return [afwImage.DefectBase(afwGeom.Box2I(afwGeom.Point2I(x0, y0), afwGeom.Point2I(x1, y1))) for
+                x0, y0, x1, y1 in (
+                    # These may be hot pixels, but we'll treat them as bad until we can get more data
+                    (3801, 666, 3805, 669),
+                    (3934, 582, 3936, 589),
+                    )]
 
     def _defectLookup(self, dataId):
-        # Evidently this gets called first
+        """ This function needs to return a non-None value otherwise the mapper gives up
+        on trying to find the defects.  I wanted to be able to return a list of defects constructed
+        in code rather than reconstituted from persisted files, so I return a dummy value.
+        """
         return "hack"
 
     def bypass_raw(self, datasetType, pythonType, location, dataId):

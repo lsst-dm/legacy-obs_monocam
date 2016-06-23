@@ -1,11 +1,10 @@
 from lsst.obs.monocam import MonocamIsrTask
 config.isr.retarget(MonocamIsrTask)
 # Configs to get going.
-config.isr.doDark=False
-config.isr.doBias=False
-config.isr.doFlat=True
-config.isr.doFringe=False
-
+config.isr.doDark = False
+config.isr.doBias = False
+config.isr.doFlat = True
+config.isr.doFringe = False
 
 config.charImage.background.binSize = 128
 config.charImage.detectAndMeasure.detection.background.binSize = 128
@@ -27,6 +26,7 @@ if False:
     config.calibrate.doAstrometry=False
     config.calibrate.doPhotoCal=False
 else:
+    # Running on sky data from USNO
     from lsst.meas.astrom import ANetAstrometryTask  # We need to blind-solve because we don't trust the Wcs
     config.calibrate.astrometry.retarget(ANetAstrometryTask)
     for ff in "griz":
