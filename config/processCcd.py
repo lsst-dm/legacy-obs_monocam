@@ -5,6 +5,7 @@ config.isr.doDark = False
 config.isr.doBias = False
 config.isr.doFlat = True
 config.isr.doFringe = False
+config.isr.doLinearize = False
 
 config.charImage.background.binSize = 128
 config.charImage.detectAndMeasure.detection.background.binSize = 128
