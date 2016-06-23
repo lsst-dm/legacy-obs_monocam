@@ -17,8 +17,15 @@ config.charImage.background.useApprox = False
 config.charImage.detectAndMeasure.detection.background.useApprox = False
 config.calibrate.detectAndMeasure.detection.background.useApprox = False
 
+# PSFEx gives better PSFs for HSC
+try:
+    import lsst.meas.extensions.psfex.psfexPsfDeterminer
+    config.charImage.measurePsf.psfDeterminer["psfex"].spatialOrder = 2
+    config.charImage.measurePsf.psfDeterminer.name = "psfex"
+except ImportError as e:
+    print "WARNING: Unable to use psfex: %s" % e
+    config.charImage.measurePsf.psfDeterminer.name = "pca"
 
-if False:
     # we don't have astrometry_net data (yet) so astrom and photo cal are impossible
     config.doCalibrate=False
 else:
