@@ -48,6 +48,7 @@ class MonocamMapper(CameraMapper):
                 'date': str,
                 'expTime': float,
                 'object': str,
+                'imageType': str,
         }
         for name in ("raw", "raw_amp",
                      # processCcd outputs
