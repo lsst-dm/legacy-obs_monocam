@@ -24,7 +24,8 @@ import lsst.pipe.base as pipe_base
 
 class MonocamIsrTask(ip_isr.IsrTask):
     @pipe_base.timeMethod
-    def run(self, ccdExposure, bias=None, dark=None,  flat=None, defects=None, fringes=None, bfKernel=None):
+    def run(self, ccdExposure, bias=None, dark=None,  flat=None, defects=None, fringes=None, bfKernel=None,
+            linearizer=None):
         """!Perform instrument signature removal on an exposure
 
         Steps include:
@@ -40,6 +41,7 @@ class MonocamIsrTask(ip_isr.IsrTask):
         \param[in] fringes -- a pipe_base.Struct with field fringes containing
                               exposure of fringe frame or list of fringe exposure
         \param[in] bfKernel -- kernel for brighter-fatter correction
+        \param[in] linearizer -- object for applying linearization
 
         \return a pipe_base.Struct with field:
          - exposure
