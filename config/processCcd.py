@@ -1,8 +1,7 @@
 from lsst.obs.monocam import MonocamIsrTask
 config.isr.retarget(MonocamIsrTask)
-# Configs to get going.
-config.isr.doDark = False
-config.isr.doBias = False
+config.isr.doDark = True
+config.isr.doBias = True
 config.isr.doFlat = True
 config.isr.doFringe = False
 config.isr.doLinearize = False

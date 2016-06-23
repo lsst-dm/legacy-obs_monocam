@@ -19,6 +19,8 @@
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
+
+import numpy
 import lsst.ip.isr as ip_isr
 import lsst.pipe.base as pipe_base
 
@@ -83,6 +85,10 @@ class MonocamIsrTask(ip_isr.IsrTask):
             if ccdExposure.getBBox().contains(amp.getBBox()):
                 ampExposure = ccdExposure.Factory(ccdExposure, amp.getBBox())
                 self.updateVariance(ampExposure, amp)
+
+        # Don't trust the variance not to be negative (over-subtraction of dark?)
+        variance = ccdExposure.getMaskedImage().getVariance().getArray()
+        variance[:] = numpy.where(variance > 0, variance, 100.0)
 
         if self.config.doFringe and not self.config.fringeAfterFlat:
             self.fringe.run(ccdExposure, **fringes.getDict())
