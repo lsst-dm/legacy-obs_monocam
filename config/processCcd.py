@@ -26,9 +26,10 @@ except ImportError as e:
     print "WARNING: Unable to use psfex: %s" % e
     config.charImage.measurePsf.psfDeterminer.name = "pca"
 
+if True:
     # we don't have astrometry_net data (yet) so astrom and photo cal are impossible
     config.doCalibrate=False
-else:
+elif False:
     # Running on sky data from USNO
     from lsst.meas.astrom import ANetAstrometryTask  # We need to blind-solve because we don't trust the Wcs
     config.calibrate.astrometry.retarget(ANetAstrometryTask)
@@ -37,3 +38,7 @@ else:
     config.calibrate.astrometry.solver.useWcsRaDecCenter = False  # It's off for some reason dunno yet
     config.calibrate.astrometry.solver.useWcsParity = False  # I doubt I guess right
     config.calibrate.astrometry.solver.useWcsPixelScale = False  # DGM says it's 0.4, but....
+else:
+    # Using default astrometry matcher
+    for ff in "griz":
+        config.calibrate.refObjLoader.filterMap["SDSS" + ff.upper()] = ff
