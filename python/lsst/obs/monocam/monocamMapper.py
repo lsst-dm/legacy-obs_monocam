@@ -78,7 +78,7 @@ class MonocamMapper(CameraMapper):
         @param dataId (dict) Data identifier with visit
         """
         visit = dataId['visit']
-        return long(visit)
+        return int(visit)
 
     def bypass_ccdExposureId(self, datasetType, pythonType, location, dataId):
         return self._computeCcdExposureId(dataId)
