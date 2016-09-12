@@ -28,6 +28,8 @@ PIXELSCALE = 0.4  # arcsec/pixel; according to Dave Monet
 WINDOW = "10 seconds"  # Time window for matching with the database
 
 _db = None  # Database handle singleton
+
+
 def getDatabase(root=None):
     """Provide a database handle
 

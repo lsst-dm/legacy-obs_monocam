@@ -50,7 +50,7 @@ class MonocamMapper(CameraMapper):
                 'date': str,
                 'expTime': float,
                 'object': str,
-        }
+                }
         for name in ("raw", "raw_amp",
                      # processCcd outputs
                      "postISRCCD", "calexp", "postISRCCD", "src", "icSrc", "srcMatch",
@@ -108,7 +108,7 @@ class MonocamMapper(CameraMapper):
                     # These may be hot pixels, but we'll treat them as bad until we can get more data
                     (3801, 666, 3805, 669),
                     (3934, 582, 3936, 589),
-                    )]
+        )]
 
     def _defectLookup(self, dataId):
         """ This function needs to return a non-None value otherwise the mapper gives up
@@ -137,7 +137,6 @@ class MonocamMapper(CameraMapper):
     bypass_raw_amp = bypass_raw
     bypass_raw_amp_md = bypass_raw_md
 
-
     def standardizeCalib(self, dataset, item, dataId):
         """Standardize a calibration image read in by the butler
 
@@ -153,7 +152,7 @@ class MonocamMapper(CameraMapper):
         if "MaskedImage" in mapping.python:
             exp = afwImage.makeExposure(item)
         elif "Image" in mapping.python:
-            if hasattr(item, "getImage"): # For DecoratedImageX
+            if hasattr(item, "getImage"):  # For DecoratedImageX
                 item = item.getImage()
             exp = afwImage.makeExposure(afwImage.makeMaskedImage(item))
         elif "Exposure" in mapping.python:
@@ -161,8 +160,9 @@ class MonocamMapper(CameraMapper):
         else:
             raise RuntimeError("Unrecognised python type: %s" % mapping.python)
 
-        if hasattr(CameraMapper, "std_" + dataset):
-            return getattr(parent, "std_" + dataset)(self, exp, dataId)
+        parent = super(CameraMapper, self)
+        if hasattr(parent, "std_" + dataset):
+            return getattr(parent, "std_" + dataset)(exp, dataId)
         return self._standardizeExposure(mapping, exp, dataId)
 
     def std_bias(self, item, dataId):

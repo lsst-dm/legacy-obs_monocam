@@ -44,8 +44,10 @@ import sqlite3
 from argparse import ArgumentParser
 from lsst.afw.image import readMetadata
 
+
 def extractor(keyword, valueType=str):
     return lambda md: valueType(md.get(keyword))
+
 
 def sexagesimal(keyword, multiplier=1.0):
     def translator(md):
@@ -74,8 +76,10 @@ CAMERA = {
     "expTime": ('DOUBLE', extractor("EXPTIME", float)),
 }
 
+
 def getDatabase(root):
     return sqlite3.connect(os.path.join(root, "monocam.sqlite"))
+
 
 def createTable(conn, table, columns):
     cmd = "CREATE TABLE %s (id INTEGER PRIMARY KEY AUTOINCREMENT, filename TEXT, " % table
@@ -83,16 +87,18 @@ def createTable(conn, table, columns):
     cmd += ")"
     conn.execute(cmd)
 
+
 def createDatabase(root):
     conn = getDatabase(root)
     createTable(conn, "shutter", SHUTTER)
     createTable(conn, "camera", CAMERA)
 
     # Join table
-    #conn.execute("CREATE TABLE match (camera INTEGER PRIMARY KEY, shutter INTEGER PRIMARY KEY)")
+    # conn.execute("CREATE TABLE match (camera INTEGER PRIMARY KEY, shutter INTEGER PRIMARY KEY)")
 
     conn.commit()
     conn.close()
+
 
 def suckMetadata(root, table, columns, filenames):
     conn = getDatabase(root)
@@ -102,7 +108,8 @@ def suckMetadata(root, table, columns, filenames):
             data = {col: colData[1](md) for col, colData in columns.iteritems()}
         except Exception as e:
             print "WARNING: Unable to parse headers from %s: %s" % (fn, e)
-            import pdb;pdb.set_trace()
+            import pdb
+            pdb.set_trace()
             continue
         sql = "INSERT INTO %s VALUES (NULL, ?" % table
         sql += ", ?" * len(columns)

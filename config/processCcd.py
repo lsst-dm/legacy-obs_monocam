@@ -22,7 +22,7 @@ config.calibrate.detectAndMeasure.detection.includeThresholdMultiplier = 1.0
 
 if False:
     # we don't have astrometry_net data (yet) so astrom and photo cal are impossible
-    config.doCalibrate=False
+    config.doCalibrate = False
 else:
     # Running on sky data from USNO
     from lsst.meas.astrom import ANetAstrometryTask  # We need to blind-solve because we don't trust the Wcs

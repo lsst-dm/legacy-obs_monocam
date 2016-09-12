@@ -1,6 +1,6 @@
 import os
 import re
-from lsst.pipe.tasks.ingest import IngestTask, ParseTask, RegisterTask, assertCanCopy
+from lsst.pipe.tasks.ingest import IngestTask, ParseTask, RegisterTask
 from lsst.pipe.tasks.ingestCalibs import CalibsParseTask
 from .hack import getDatabase, getHeader, getDateFromHeader, getShutterData
 
@@ -17,7 +17,6 @@ filters = {
 }
 
 EXTENSIONS = ["fits", "gz", "fz"]  # Filename extensions to strip off
-
 
 
 class HackParseTask(ParseTask):
@@ -43,7 +42,7 @@ class HackParseTask(ParseTask):
                 "expTime": data.expTime,
                 "ccd": 0,
                 "object": data.objectName,
-        }
+                }
         return info, [info]
 
 
@@ -79,6 +78,7 @@ class MonocamRegisterTask(RegisterTask):
     to match the auto-incremented ID in the registery. This is used for both lab
     data and USNO data since there is no exposure ID in the FITS headers of either.
     """
+
     def addVisits(self, conn, dryrun=False, table=None):
         """Set the visit numbers to match the 'id' field"""
         if table is None:
@@ -97,6 +97,7 @@ class MonocamIngestTask(IngestTask):
     This opens the database handle, used for the hack to support ingesting
     USNO monocam data.
     """
+
     def run(self, args):
         """Open the database"""
         getDatabase(args.butler.repository._mapper.root)
@@ -107,6 +108,7 @@ class MonocamIngestTask(IngestTask):
 
 class MonocamCalibsParseTask(CalibsParseTask):
     """Parser for calibs"""
+
     def _translateFromCalibId(self, field, md):
         """Get a value from the CALIB_ID written by constructCalibs"""
         data = md.get("CALIB_ID")

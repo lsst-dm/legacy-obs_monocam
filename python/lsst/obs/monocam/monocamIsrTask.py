@@ -22,9 +22,11 @@
 import lsst.ip.isr as ip_isr
 import lsst.pipe.base as pipe_base
 
+
 class MonocamIsrTask(ip_isr.IsrTask):
+
     @pipe_base.timeMethod
-    def run(self, ccdExposure, bias=None, dark=None,  flat=None, defects=None, fringes=None, bfKernel=None):
+    def run(self, ccdExposure, bias=None, dark=None, flat=None, defects=None, fringes=None, bfKernel=None):
         """!Perform instrument signature removal on an exposure
 
         Steps include:
@@ -45,7 +47,7 @@ class MonocamIsrTask(ip_isr.IsrTask):
          - exposure
         """
 
-        #Validate Input
+        # Validate Input
         if self.config.doBias and bias is None:
             raise RuntimeError("Must supply a bias exposure if config.doBias True")
         if self.config.doDark and dark is None:
@@ -77,7 +79,7 @@ class MonocamIsrTask(ip_isr.IsrTask):
             self.darkCorrection(ccdExposure, dark)
 
         for amp in ccd:
-            #if ccdExposure is one amp, check for coverage to prevent performing ops multiple times
+            # if ccdExposure is one amp, check for coverage to prevent performing ops multiple times
             if ccdExposure.getBBox().contains(amp.getBBox()):
                 ampExposure = ccdExposure.Factory(ccdExposure, amp.getBBox())
                 self.updateVariance(ampExposure, amp)
@@ -100,7 +102,7 @@ class MonocamIsrTask(ip_isr.IsrTask):
         ccdExposure.getCalib().setFluxMag0(self.config.fluxMag0T1 * ccdExposure.getCalib().getExptime())
 
         return pipe_base.Struct(
-            exposure = ccdExposure,
+            exposure=ccdExposure,
         )
 
     @pipe_base.timeMethod
@@ -120,7 +122,7 @@ class MonocamIsrTask(ip_isr.IsrTask):
         # We should probably loop over this using the butler.
         ampDict = {}
         for channel in range(16):
-            sensorRef.dataId['channel'] = channel+1 # to get the correct channel
+            sensorRef.dataId['channel'] = channel+1  # to get the correct channel
             ampExposure = sensorRef.get('raw_amp', immediate=True)
             ampExposure = self.convertIntToFloat(ampExposure)
             # assumes amps are in order of the channels
@@ -134,9 +136,7 @@ class MonocamIsrTask(ip_isr.IsrTask):
         isrData = self.readIsrData(sensorRef, ccdExposure)
         result = self.run(ccdExposure, **isrData.getDict())
 
-
         if self.config.doWrite:
             sensorRef.put(result.exposure, "postISRCCD")
 
         return result
-
