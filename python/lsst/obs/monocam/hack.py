@@ -1,3 +1,4 @@
+from builtins import str
 import os
 import sqlite3
 from lsst.pipe.base import Struct

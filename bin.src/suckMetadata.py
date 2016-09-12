@@ -37,6 +37,8 @@ Doing the camera files is not necessary for ingesting and processing
 Monocam data, but it allows you to play around with techniques for
 joining the two tables.
 """
+from __future__ import print_function
+from builtins import map
 
 import os
 from glob import glob
@@ -57,7 +59,7 @@ def sexagesimal(keyword, multiplier=1.0):
             sex = sex[1:]
         else:
             sign = +1
-        dd, mm, ss = map(float, sex.split(":"))
+        dd, mm, ss = (float(s) for s in sex.split(":"))
         return sign*(dd + mm/60.0 + ss/3600.0)*multiplier
     return translator
 
@@ -83,7 +85,7 @@ def getDatabase(root):
 
 def createTable(conn, table, columns):
     cmd = "CREATE TABLE %s (id INTEGER PRIMARY KEY AUTOINCREMENT, filename TEXT, " % table
-    cmd += ", ".join([("%s %s" % (col, colData[0])) for col, colData in columns.iteritems()])
+    cmd += ", ".join([("%s %s" % (col, colData[0])) for col, colData in columns.items()])
     cmd += ")"
     conn.execute(cmd)
 
@@ -105,9 +107,9 @@ def suckMetadata(root, table, columns, filenames):
     for fn in sum([glob(fn) for fn in filenames], []):
         md = readMetadata(fn, 1)
         try:
-            data = {col: colData[1](md) for col, colData in columns.iteritems()}
+            data = {col: colData[1](md) for col, colData in columns.items()}
         except Exception as e:
-            print "WARNING: Unable to parse headers from %s: %s" % (fn, e)
+            print("WARNING: Unable to parse headers from %s: %s" % (fn, e))
             import pdb
             pdb.set_trace()
             continue

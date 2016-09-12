@@ -9,7 +9,7 @@ config.register.columns = {
     'ccd': 'int',
     'object': 'text',
 }
-config.register.visit = config.register.columns.keys()
+config.register.visit = list(config.register.columns.keys())
 config.allowError = True  # Errors tend to happen a lot with this camera...
 
 if False:  # For lab data

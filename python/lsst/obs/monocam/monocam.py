@@ -1,3 +1,4 @@
+from builtins import range
 #
 # LSST Data Management System
 # Copyright 2016 LSST Corporation.
@@ -161,7 +162,7 @@ class Monocam(cameraGeom.Camera):
         self.ampInfoDict = {}
         ampCatalog = AmpInfoCatalog(schema)
         for ampY in (0, 1):
-            for ampX in xrange(8):
+            for ampX in range(8):
                 record = ampCatalog.addNew()
                 record.setName("%d%d" % (ampX, ampY))
 
