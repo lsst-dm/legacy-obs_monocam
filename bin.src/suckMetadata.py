@@ -37,6 +37,7 @@ Doing the camera files is not necessary for ingesting and processing
 Monocam data, but it allows you to play around with techniques for
 joining the two tables.
 """
+from __future__ import print_function
 
 import os
 from glob import glob
@@ -107,7 +108,7 @@ def suckMetadata(root, table, columns, filenames):
         try:
             data = {col: colData[1](md) for col, colData in columns.iteritems()}
         except Exception as e:
-            print "WARNING: Unable to parse headers from %s: %s" % (fn, e)
+            print("WARNING: Unable to parse headers from %s: %s" % (fn, e))
             import pdb
             pdb.set_trace()
             continue

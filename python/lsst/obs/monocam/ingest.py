@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import re
 from lsst.pipe.tasks.ingest import IngestTask, ParseTask, RegisterTask
@@ -85,7 +86,7 @@ class MonocamRegisterTask(RegisterTask):
             table = self.config.table
         sql = "UPDATE %s SET visit = id" % table
         if dryrun:
-            print "Would execute: %s" % sql
+            print("Would execute: %s" % sql)
         else:
             conn.execute(sql)
         return RegisterTask.addVisits(self, conn, dryrun=dryrun, table=table)
