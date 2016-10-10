@@ -24,7 +24,7 @@
 import lsst.afw.image.utils as afwImageUtils
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
-from lsst.daf.butlerUtils import CameraMapper
+from lsst.obs.base import CameraMapper
 import lsst.pex.policy as pexPolicy
 from .monocam import Monocam
 from .hack import getDatabase, fakeWcs
