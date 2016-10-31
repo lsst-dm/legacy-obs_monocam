@@ -97,7 +97,7 @@ calibrations: {
         persistable: "DecoratedImageF"
         storage:     "FitsStorage"
         level:       "Ccd"
-        tables:      "bias"
+        tables:      "dark"
         columns:     "date"
         obsTimeName: "date"
         reference:   "raw_visit"

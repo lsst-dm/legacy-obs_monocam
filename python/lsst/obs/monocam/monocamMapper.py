@@ -27,7 +27,6 @@ import lsst.afw.image as afwImage
 from lsst.obs.base import CameraMapper
 import lsst.pex.policy as pexPolicy
 from .monocam import Monocam
-from .hack import getDatabase, fakeWcs
 
 __all__ = ["MonocamMapper"]
 
@@ -41,8 +40,6 @@ class MonocamMapper(CameraMapper):
 
         CameraMapper.__init__(self, policy, policyFile.getRepositoryPath(), **kwargs)
 
-        getDatabase(kwargs["root"])
-
         # Ensure each dataset type of interest knows about the full range of keys available from the registry
         keys = {'visit': int,
                 'ccd': int,
@@ -50,6 +47,7 @@ class MonocamMapper(CameraMapper):
                 'date': str,
                 'expTime': float,
                 'object': str,
+                'imageType': str,
                 }
         for name in ("raw", "raw_amp",
                      # processCcd outputs
@@ -129,9 +127,6 @@ class MonocamMapper(CameraMapper):
         """Read metadata for raw image, adding fake Wcs"""
         filename = location.getLocations()[0]
         md = afwImage.readMetadata(filename, 1)  # 1 = PHU
-        wcs = fakeWcs(md).getFitsMetadata()
-        for key in wcs.names():
-            md.set(key, wcs.get(key))
         return md
 
     bypass_raw_amp = bypass_raw
