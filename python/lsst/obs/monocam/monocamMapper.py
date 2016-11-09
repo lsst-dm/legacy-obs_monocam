@@ -65,7 +65,7 @@ class MonocamMapper(CameraMapper):
         afwImageUtils.defineFilter('r', 619.42, alias=["SDSSR"])
         afwImageUtils.defineFilter('i', 752.06, alias=["SDSSI"])
         afwImageUtils.defineFilter('z', 866.85, alias=["SDSSZ"])
-        afwImageUtils.defineFilter('y', 971.68, alias=['y4'])  # official y filter
+        afwImageUtils.defineFilter('y', 971.68, alias=['y4', 'Y4'])  # official y filter
         afwImageUtils.defineFilter('NONE', 0.0, alias=['no_filter', "OPEN"])
 
     def _extractDetectorName(self, dataId):

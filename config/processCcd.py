@@ -6,7 +6,7 @@ config.isr.doFlat = True
 config.isr.doFringe = False
 config.isr.doLinearize = False
 
-config.charImage.repair.doCosmicRay = False
+config.charImage.repair.doCosmicRay = True
 config.charImage.repair.cosmicray.nCrPixelMax = 1000000
 
 
@@ -26,10 +26,10 @@ except ImportError as e:
     print "WARNING: Unable to use psfex: %s" % e
     config.charImage.measurePsf.psfDeterminer.name = "pca"
 
-if True:
+if False:
     # we don't have astrometry_net data (yet) so astrom and photo cal are impossible
     config.doCalibrate=False
-elif False:
+elif True:
     # Running on sky data from USNO
     from lsst.meas.astrom import ANetAstrometryTask  # We need to blind-solve because we don't trust the Wcs
     config.calibrate.astrometry.retarget(ANetAstrometryTask)
