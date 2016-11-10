@@ -27,7 +27,7 @@ import lsst.afw.image as afwImage
 from lsst.daf.butlerUtils import CameraMapper
 import lsst.pex.policy as pexPolicy
 from .monocam import Monocam
-from .hack import getDatabase, fakeWcs
+#from .hack import getDatabase, fakeWcs
 
 __all__ = ["MonocamMapper"]
 
