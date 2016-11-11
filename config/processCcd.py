@@ -4,7 +4,7 @@ config.isr.doDark = True
 config.isr.doBias = True
 config.isr.doFlat = True
 config.isr.doFringe = False
-config.isr.doLinearize = False
+#config.isr.doLinearize = False
 
 config.charImage.repair.doCosmicRay = True
 config.charImage.repair.cosmicray.nCrPixelMax = 1000000

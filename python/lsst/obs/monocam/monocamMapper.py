@@ -60,13 +60,14 @@ class MonocamMapper(CameraMapper):
         self.filterIdMap = {'u': 0, 'g': 1, 'r': 2, 'i': 3, 'z': 4, 'y': 5}
 
         # The LSST Filters from L. Jones 04/07/10
-        afwImageUtils.defineFilter('u', 364.59)
-        afwImageUtils.defineFilter('g', 476.31, alias=["SDSSG"])
-        afwImageUtils.defineFilter('r', 619.42, alias=["SDSSR"])
-        afwImageUtils.defineFilter('i', 752.06, alias=["SDSSI"])
-        afwImageUtils.defineFilter('z', 866.85, alias=["SDSSZ"])
-        afwImageUtils.defineFilter('y', 971.68, alias=['y4', 'Y4'])  # official y filter
-        afwImageUtils.defineFilter('NONE', 0.0, alias=['no_filter', "OPEN"])
+        afwImageUtils.defineFilter('u', 364.59, alias=['U'])
+        afwImageUtils.defineFilter('g', 476.31, alias=['SDSSG'])
+        afwImageUtils.defineFilter('r', 619.42, alias=['SDSSR'])
+        afwImageUtils.defineFilter('i', 752.06, alias=['SDSSI'])
+        afwImageUtils.defineFilter('z', 866.85, alias=['SDSSZ'])
+        afwImageUtils.defineFilter('y3', 950.00, alias=['y3', 'Y3'])  # UNofficial y filter
+        afwImageUtils.defineFilter('y',  971.68, alias=['y4', 'Y4'])  # official y filter
+        afwImageUtils.defineFilter('NONE', 0.0, alias=['no_filter', 'OPEN', 'GRATING', 'X'])
 
     def _extractDetectorName(self, dataId):
         return "0"
