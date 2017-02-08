@@ -1,5 +1,5 @@
-from lsst.obs.monocam import MonocamIsrTask
-config.isr.retarget(MonocamIsrTask)
+from lsst.obs.ctio0m9 import Ctio0m9IsrTask
+config.isr.retarget(Ctio0m9IsrTask)
 config.isr.doDark = True
 config.isr.doBias = True
 config.isr.doFlat = True
