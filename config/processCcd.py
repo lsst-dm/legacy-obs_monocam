@@ -6,16 +6,20 @@ config.isr.doFlat = True
 config.isr.doFringe = False
 config.isr.doLinearize = False
 
+
+
 config.charImage.repair.doCosmicRay = False
 config.charImage.repair.cosmicray.nCrPixelMax = 1000000
 
 
 config.charImage.background.binSize = 128
-config.charImage.detectAndMeasure.detection.background.binSize = 128
-config.calibrate.detectAndMeasure.detection.background.binSize = 128
+#->AttributeError: 'CharacterizeImageConfig' object has no attribute 'detectAndMeasure'
+#config.charImage.detectAndMeasure.detection.background.binSize = 128
+#config.calibrate.detectAndMeasure.detection.background.binSize = 128
 config.charImage.background.useApprox = False
-config.charImage.detectAndMeasure.detection.background.useApprox = False
-config.calibrate.detectAndMeasure.detection.background.useApprox = False
+#config.charImage.detectAndMeasure.detection.background.useApprox = False
+#config.calibrate.detectAndMeasure.detection.background.useApprox = False
+
 
 # PSFEx gives better PSFs for HSC
 try:
