@@ -1,0 +1,312 @@
+	**************	
+        * 07/02/2017 *
+	**************
+
+### To tchat :
+https://lsstc.slack.com/messages/@swinbank,merlin/
+
+declare an obs package for .9-m telescope.
+
+### Starting with monocam as an exemple : 
+git clone https://github.com/lsst/obs_monocam
+
+First idea is to replace all reps and files:
+monocam -> ctio0m9
+
+### set up the environment :
+
+source activate lsst
+source eups-setups.sh
+setup lsst_distrib -> not anymore, rather :
+setup lsst_apps
+Scons
+
+
+source ../lsst_stack/loadLSST.bash
+### in obs_ctio0m9
+setup lsst_apps
+setup -j obs_ctio0m9 -r . 
+
+
+In the rep of the images :
+_mapper : 
+lsst.obs.ctio0m9.ctio0m9Mapper
+
+
+### I would like to reproduce this processing : 
+process.py -b HD14943 -d -k -m -i /Users/augustinguyonnet/harvard/data/january2017/20170118_234.fits
+
+### In sandbox : ln -s /Users/augustinguyonnet/harvard/data/january2017/20170118_234.fits .
+
+processCcd.py .
+
+The binaries don't have obs_base -> shift to an installation from source
+
+	**************	
+        * 08/02/2017 *
+	**************
+
+setup lsst_apps
+Now, should make ingestImages.py work.
+~/dm/obs_ctio0m9$ ingestImages.py sandbox/
+
+### or :
+ingestImages.py sandbox/ prod/20170118_234.fits 
+
+
+### I clone Merlin package to see if my bug is coming from the package or the stack :
+git clone https://github.com/lsst-dm/obs_ts3
+source ../lsst_stack/loadLSST.bash
+setup lsst_apps
+setup -j obs_ts3 -r . 
+
+
+
+
+################################
+# stack version of header :    #
+# fitsheader *.fits -e 0       #
+### ############################
+
+### a bug :
+make detector takes only 3 arguments.
+### pick right keywords in config/ingest.py
+
+
+If need to translate one mandatory keyword, for instance,
+'visit' beeing an int, then add a :
+   'visit': 'translate_visit',
+and go to :
+python/lsst/obs/ctio0m9/ingest.py
+to write the rountine, for instance :
+
+    def translate_visit(self, md):
+        im = md.get("ID")
+        out = re.sub("[^0-9]", "", im)
+        print ('VISIT :%s'%out)
+        return out
+
+then, run :
+rm -rf sandbox/registry.sqlite3* sandbox/raw/
+ingestImages.py sandbox/ prod/20170118_234.fits 
+--> Ok
+
+### Next, move to :
+processCcd.py sandbox/
+
+
+
+
+	**************	
+        * 09/02/2017 *
+	**************
+
+### Dogygen doc :
+https://lsst-web.ncsa.illinois.edu/doxygen/x_masterDoxyDoc/
+
+### Some tips :
+https://confluence.lsstcorp.org/display/LSWUG/pipe_base
+
+processCcd.py sandbox/ --output prod/test
+processCcd.py sandbox/ --show config
+processCcd.py sandbox/  --output prod/test/
+
+### In /policy, in ctio0m9Mapped.paf, The rep names can be changed.
+(because OBJECT may be defferent depending on the observer)
+
+
+**********************************************************
+* Exemple from Merlin of processing			 *
+**********************************************************
+
+ingestImages.py /nfs/lsst2/photocalData/data/monocam/sanitised9/1m3/processing_jason /nfs/lsst2/photocalData/data/monocam/sanitised9/1m3/calibs/*.fits
+constructBias.py /nfs/lsst2/photocalData/data/monocam/sanitised9/1m3/processing_jason --calib /nfs/lsst2/photocalData/data/monocam/sanitised9/1m3/processing_jason/CALIB --rerun 1 --cores 4 --batch-type=smp --id object='BIAS' -c isr.doLinearize=False
+ingestCalibs.py /nfs/lsst2/photocalData/data/monocam/sanitised9/1m3/processing_jason --calibType bias /nfs/lsst2/photocalData/data/monocam/sanitised9/1m3/processing_jason/CALIB/bias/*/* --validity 9999
+constructDark.py /nfs/lsst2/photocalData/data/monocam/sanitised9/1m3/processing_jason --calib /nfs/lsst2/photocalData/data/monocam/sanitised9/1m3/processing_jason/CALIB --rerun 1 --cores 25 --batch-type=smp --id object='DARK' -c isr.doBias=True isr.doLinearize=False
+ingestCalibs.py /nfs/lsst2/photocalData/data/monocam/sanitised9/1m3/processing_jason --calibType dark /nfs/lsst2/photocalData/data/monocam/sanitised9/1m3/processing_jason/CALIB/dark/*/* --validity 9999
+---------------
+Now we produce flatfield images for each filter, using the master bias and master dark frames from before:
+nohup constructFlat.py /nfs/lsst2/photocalData/data/monocam/sanitised9/1m3/processing_jason --calib /nfs/lsst2/photocalData/data/monocam/sanitised9/1m3/processing_jason/CALIB --rerun flat-test --id object='FLAT' filter='U' --cores 8 --job flat-U -c isr.doBias=True isr.doDark=True 
+nohup constructFlat.py /nfs/lsst2/photocalData/data/monocam/sanitised9/1m3/processing_jason --calib /nfs/lsst2/photocalData/data/monocam/sanitised9/1m3/processing_jason/CALIB --rerun flat-test --id object='FLAT' filter='SDSSG' --cores 8 --job flat-SDSSG -c isr.doBias=True isr.doDark=True 
+nohup constructFlat.py /nfs/lsst2/photocalData/data/monocam/sanitised9/1m3/processing_jason --calib /nfs/lsst2/photocalData/data/monocam/sanitised9/1m3/processing_jason/CALIB --rerun flat-test --id object='FLAT' filter='SDSSR' --cores 8 --job flat-SDSSR -c isr.doBias=True isr.doDark=True 
+nohup constructFlat.py /nfs/lsst2/photocalData/data/monocam/sanitised9/1m3/processing_jason --calib /nfs/lsst2/photocalData/data/monocam/sanitised9/1m3/processing_jason/CALIB --rerun flat-test --id object='FLAT' filter='SDSSI' --cores 8 --job flat-SDSSI -c isr.doBias=True isr.doDark=True 
+nohup constructFlat.py /nfs/lsst2/photocalData/data/monocam/sanitised9/1m3/processing_jason --calib /nfs/lsst2/photocalData/data/monocam/sanitised9/1m3/processing_jason/CALIB --rerun flat-test --id object='FLAT' filter='Z' --cores 8 --job flat-Z -c isr.doBias=True isr.doDark=True 
+nohup constructFlat.py /nfs/lsst2/photocalData/data/monocam/sanitised9/1m3/processing_jason --calib /nfs/lsst2/photocalData/data/monocam/sanitised9/1m3/processing_jason/CALIB --rerun flat-test --id object='FLAT' filter='Y3' --cores 8 --job flat-Y3 -c isr.doBias=True isr.doDark=True 
+nohup constructFlat.py /nfs/lsst2/photocalData/data/monocam/sanitised9/1m3/processing_jason --calib /nfs/lsst2/photocalData/data/monocam/sanitised9/1m3/processing_jason/CALIB --rerun flat-test --id object='FLAT' filter='Y4' --cores 8 --job flat-Y4 -c isr.doBias=True isr.doDark=True 
+nohup constructFlat.py /nfs/lsst2/photocalData/data/monocam/sanitised9/1m3/processing_jason --calib /nfs/lsst2/photocalData/data/monocam/sanitised9/1m3/processing_jason/CALIB --rerun flat-test --id object='FLAT' filter='X' --cores 8 --job flat-X -c isr.doBias=True isr.doDark=True 
+nohup constructFlat.py /nfs/lsst2/photocalData/data/monocam/sanitised9/1m3/processing_jason --calib /nfs/lsst2/photocalData/data/monocam/sanitised9/1m3/processing_jason/CALIB --rerun flat-test --id object='FLAT' filter='GRATING' --cores 8 --job flat-GRATING -c isr.doBias=True isr.doDark=True 
+Now we ingest the master flats we produced:
+ingestCalibs.py /nfs/lsst2/photocalData/data/monocam/sanitised9/1m3/processing_jason --calibType flat /nfs/lsst2/photocalData/data/monocam/sanitised9/1m3/processing_jason/CALIB/flat/*/*/* --validity 9999
+Now we actually ingest the sky images!
+ingestImages.py /nfs/lsst2/photocalData/data/monocam/sanitised9/1m3/processing_jason /nfs/lsst2/photocalData/data/monocam/sanitised9/1m3/1m3/*.fits
+And NOW we process the data! :o
+processCcd.py /nfs/lsst2/photocalData/data/monocam/sanitised9/1m3/processing_jason/ --calib CALIB --rerun test_1 --id visit=1333 --doraise -c isr.doLinearize=False
+
+
+**********************************************************
+* END Exemple from Merlin of processing			 *
+**********************************************************
+
+
+error is : error mismatch out of processCcd.py because a print added somewhere; either :
+- restart from ingest.py
+- or add clobber--versions
+
+Now I need to know the visit number either :
+- By a print
+- Learning how to ask sqlite.
+
+
+rm -rf prod/test/ sandbox/raw/ sandbox/registry.sqlite3 
+ingestImages.py sandbox/ prod/20170118_234.fits 
+V# ISIT :3620170119014819
+processCcd.py sandbox/  --id visit=3620170119014819 --output prod/test/
+
+# pb with cfitsio
+import astropy.io.fits as pf
+img = pf.open('prod/20170118_234.fits')
+-> only on extension
+rm -rf prod/test/
+processCcd.py sandbox/  --id visit=3620170119014819 --output prod/test/ --loglevel info
+
+### Now, I would like to change something into the stack, in isr :
+ File "/Users/augustinguyonnet/dm/lsst_stack/DarwinX86/ip_isr/12.1-5-g9b15cd5+8/python/lsst/ip/isr/assembleCcdTask.py", line 200, in assembleCcd
+    ccd = next(assembleInput.values()).getDetector()
+TypeError: list object is not an iterator
+
+
+
+
+
+mkdir dev
+cd dev
+~/dm/obs_ctio0m9/dev$ git clone https://github.com/lsst/ip_isr
+Git fetch
+# because Merlin fixed the bug for me :
+git checkout tickets/DM-9370
+### if not, if I want to develop aside :
+git checkout -b a_name
+### And then I am good to commit and push in my branch
+
+
+
+###So, after that, I need to setup a new environement, from this :
+eups list -s ip_isr
+I move there :
+
+setup -j ip_isr -r ~/dm/obs_ctio0m9/dev/ip_isr
+## Also ->
+~/dm/obs_ctio0m9/dev/ip_isr$ scons
+### because I had this :
+ from .version import *
+ImportError: No module named version
+
+
+
+# I want to get Merlin's fix to Wcs:
+
+git clone https://github.com/lsst/obs_base
+cd obs_base/
+git fetch
+git checkout tickets/DM-9364
+scons
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+-> re-organizing the reps :
+In summary I source this in my home/dm :
+
+cd ~/dm
+source lsst_stack/loadLSST.bash
+setup lsst_apps
+setup -j obs_ctio0m9 -r ~/dm/git/obs_ctio0m9
+setup -j ip_isr -r ~/dm/git/ip_isr
+setup -j obs_base -r ~/dm/git/obs_base
+
+
+# check if used with:
+eups list
+
+	**************	
+        * 21/02/2017 *
+	**************
+
+# I test the soft with an image :
+~/dm/git/obs_ctio0m9$ 
+rm -rf ~/dm/tests/prod/test/ ~/dm/tests/sandbox/raw/ ~/dm/tests/sandbox/registry.sqlite3*
+ingestImages.py ~/dm/tests/sandbox/ ~/dm/tests/prod/20170118_234.fits
+rm -rf ~/dm/tests/prod/test/
+processCcd.py ~/dm/tests/sandbox/  --id visit=3620170119014819 --output ~/dm/tests/prod/test/ --loglevel info
+
+	**************	
+        * 05/03/2017 *
+	**************
+
+I have hardcoded the frame limits.
+Then, I failed at this step :
+ ccdExposure = self.assembleCcd.assembleCcd(ampDict)
+
+
+	**************	
+        * 09/03/2017 *
+	**************
+
+### ButlerDataRef :
+https://lsst-web.ncsa.illinois.edu/doxygen/x_masterDoxyDoc/butler_subset_8py_source.html
+
+### To assemble an image :
+https://github.com/lsst/afw/blob/master/python/lsst/afw/cameraGeom/assembleImage.py
+
+### TimeMethod is a decorator, here :
+https://github.com/lsst/pipe_base/blob/master/python/lsst/pipe/base/timer.py
+### Why would I need this time thing?
+
+
+I would like to push here :
+https://github.com/lsst-dm/obs_ctio0m9
+
+### Should I do that ?
+http://stackoverflow.com/questions/5181845/git-push-existing-repo-to-a-new-and-different-remote-repo-server
+
+
+git remote add obs_ctio0m9 https://github.com/lsst-dm/obs_ctio0m9
+
+
+	**************	
+        * 10/03/2017 *
+	**************
+
+### About :
+~/dm/git/obs_ctio0m9/python/lsst/obs/ctio0m9/makeTestRawVisitInfo.py
+
+# A. Guyonnet copied this file :
+# https://github.com/lsst/obs_test/blob/342573dca30741cf72a1b1a5b0ffa3706d66f7b9/python/lsst/obs/test/makeTestRawVisitInfo.py#L34
+# On an advise from S. Krughoff to override the base class which specifies getDateAvg()
+# Read :https://lsstc.slack.com/messages/dm-obs-packges/
+
+Declare 
+   MakeRawVisitInfoClass = MakeTestRawVisitInfo
+In
+	ctio0m9Mapper.py
+
+
+### Calib :
+
+### In calib : ln -s /Users/augustinguyonnet/harvard/data/january2017/20170118_234.fits .
+
+rm -rf ~/dm/tests/calib/raw/ ~/dm/tests/calib/*sqlite3*
+ingestCalibs.py ~/dm/tests/calib/ /Users/augustinguyonnet/harvard/data/nov2016/n1/f001.fits --calib ~/dm/tests/calib/ --validity 100 
+
+--> ok
+! Although note that ingestImage.py and ingestCalib.py does not behave the same : in ingestCalib.py, by default, the sql database is written in the current repository
+
+
+rm -rf ~/dm/tests/prod/test/ ~/dm/tests/sandbox/raw/ ~/dm/tests/sandbox/registry.sqlite3*
+ingestImages.py ~/dm/tests/sandbox/ /Users/augustinguyonnet/harvard/data/nov2016/n1/f056.fits
+
+rm -rf ~/dm/tests/prod/test/
+processCcd.py ~/dm/tests/sandbox/  --id visit=16112301452 --output ~/dm/tests/prod/test/ --loglevel info
+
+! Wrong assembling of the image
+
+processCcd.py ~/dm/tests/sandbox/  --calib ~/dm/tests/calib/ --id visit=3620161123014529 --output ~/dm/tests/prod/test/ --loglevel info
+

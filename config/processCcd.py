@@ -1,8 +1,8 @@
-from lsst.obs.ctio0m9 import Ctio0m9IsrTask
-config.isr.retarget(Ctio0m9IsrTask)
-config.isr.doDark = True
-config.isr.doBias = True
-config.isr.doFlat = True
+#from lsst.obs.ctio0m9 import Ctio0m9IsrTask
+#config.isr.retarget(Ctio0m9IsrTask)
+config.isr.doDark = False
+config.isr.doBias = False
+config.isr.doFlat = False
 config.isr.doFringe = False
 config.isr.doLinearize = False
 

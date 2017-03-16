@@ -20,13 +20,17 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-
+import re
 import lsst.afw.image.utils as afwImageUtils
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
-from lsst.obs.base import CameraMapper
+from lsst.obs.base import CameraMapper, exposureFromImage
 import lsst.pex.policy as pexPolicy
 from .ctio0m9 import Ctio0m9
+from .makeTestRawVisitInfo import MakeTestRawVisitInfo
+
+import lsst.afw.coord as afwCoord
+import lsst.pex.exceptions as pexExcept
 
 __all__ = ["Ctio0m9Mapper"]
 
@@ -34,12 +38,15 @@ __all__ = ["Ctio0m9Mapper"]
 class Ctio0m9Mapper(CameraMapper):
     packageName = 'obs_ctio0m9'
 
+
+    MakeRawVisitInfoClass = MakeTestRawVisitInfo
+    
     def __init__(self, inputPolicy=None, **kwargs):
         policyFile = pexPolicy.DefaultPolicyFile(self.packageName, "ctio0m9Mapper.paf", "policy")
         policy = pexPolicy.Policy(policyFile)
 
         CameraMapper.__init__(self, policy, policyFile.getRepositoryPath(), **kwargs)
-
+    
         # Ensure each dataset type of interest knows about the full range of keys available from the registry
         keys = {'visit': int,
                 'ccd': int,
@@ -62,6 +69,7 @@ class Ctio0m9Mapper(CameraMapper):
         #lsst::pex::exceptions::NotFoundError: 'Unable to find filter OPEN5_RONCHI400'
         # I do that :
         afwImageUtils.defineFilter('OPEN5_RONCHI400', 500.)
+        afwImageUtils.defineFilter('CLEAR_Ronchi', 500.)
         afwImageUtils.defineFilter('u', 364.59)
         afwImageUtils.defineFilter('g', 476.31, alias=["SDSSG"])
         afwImageUtils.defineFilter('r', 619.42, alias=["SDSSR"])
@@ -81,11 +89,11 @@ class Ctio0m9Mapper(CameraMapper):
         visit = dataId['visit']
         return int(visit)
 
-    #def bypass_ccdExposureId(self, datasetType, pythonType, location, dataId):
-    #    return self._computeCcdExposureId(dataId)
+    def bypass_ccdExposureId(self, datasetType, pythonType, location, dataId):
+        return self._computeCcdExposureId(dataId)
 
-    #def bypass_ccdExposureId_bits(self, datasetType, pythonType, location, dataId):
-    #    return 41
+    def bypass_ccdExposureId_bits(self, datasetType, pythonType, location, dataId):
+        return 52
 
     def validate(self, dataId):
         visit = dataId.get("visit")
@@ -102,14 +110,14 @@ class Ctio0m9Mapper(CameraMapper):
         """
         return Ctio0m9()
 
-    #def bypass_defects(self, datasetType, pythonType, location, dataId):
-    #    """ since we have no defects, return an empty list.  Fix this when defects exist """
-    #    return [afwImage.DefectBase(afwGeom.Box2I(afwGeom.Point2I(x0, y0), afwGeom.Point2I(x1, y1))) for
-    #            x0, y0, x1, y1 in (
-    #                # These may be hot pixels, but we'll treat them as bad until we can get more data
-    #                (3801, 666, 3805, 669),
-    #                (3934, 582, 3936, 589),
-    #    )]
+    def bypass_defects(self, datasetType, pythonType, location, dataId):
+        """ since we have no defects, return an empty list.  Fix this when defects exist """
+        return [afwImage.DefectBase(afwGeom.Box2I(afwGeom.Point2I(x0, y0), afwGeom.Point2I(x1, y1))) for
+                x0, y0, x1, y1 in (
+                    # These may be hot pixels, but we'll treat them as bad until we can get more data
+                    (3801, 666, 3805, 669),
+                    (3934, 582, 3936, 589),
+        )]
 
     def _defectLookup(self, dataId):
         """ This function needs to return a non-None value otherwise the mapper gives up
@@ -118,24 +126,29 @@ class Ctio0m9Mapper(CameraMapper):
         """
         return "hack"
 
-    # ThisAny bypass thing overwrite the method 
-    #def bypass_raw(self, datasetType, pythonType, location, dataId):
-    #    """Read raw image with hacked metadata"""
-    #    filename = location.getLocations()[0]
-    #    md = self.bypass_raw_md(datasetType, pythonType, location, dataId)
-    #    image = afwImage.DecoratedImageU(filename)
-    #    image.setMetadata(md)
-    #    return self.std_raw(image, dataId)
-    #
-    #def bypass_raw_md(self, datasetType, pythonType, location, dataId):
-    #    """Read metadata for raw image, adding fake Wcs"""
-    #    filename = location.getLocations()[0]
-    #    md = afwImage.readMetadata(filename, 1)  # 1 = PHU
-    #    return md
-    #
-    #bypass_raw_amp = bypass_raw
-    #bypass_raw_amp_md = bypass_raw_md
+    
+    def std_raw(self, item, dataId):
+        """
+        Added because there are no valid Wcs in fits headers
+        Convert the raw DecoratedImage to an Exposure, set metadata and wcs.
+        """
+        exp = exposureFromImage(item)
+        md  = exp.getMetadata()
+        rawPath    = self.map_raw(dataId).getLocations()[0]
+        headerPath = re.sub(r'[\[](\d+)[\]]$', "[0]", rawPath)
+        md0   = afwImage.readMetadata(headerPath)
+        crval = afwCoord.makeCoord(afwCoord.ICRS, 0*afwGeom.degrees, 0*afwGeom.degrees)
+        crpix = afwGeom.PointD(0, 0)
+        wcs   = afwImage.makeWcs(crval, crpix, 1, 0, 0, 1)
+        exp.setWcs(wcs)
+        exposureId = self._computeCcdExposureId(dataId)
+        visitInfo  = self.makeRawVisitInfo(md=md0, exposureId=exposureId)
+        exp.getInfo().setVisitInfo(visitInfo)
+        return self._standardizeExposure(self.exposures['raw'], exp, dataId,
+                                         trimmed=True)
 
+        
+    
     def standardizeCalib(self, dataset, item, dataId):
         """Standardize a calibration image read in by the butler
 

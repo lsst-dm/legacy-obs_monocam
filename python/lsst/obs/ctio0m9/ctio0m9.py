@@ -95,7 +95,7 @@ class Ctio0m9(cameraGeom.Camera):
         detector0Config.detectorType = 0
         # This is the orientation we need to put the serial direciton along the x-axis
         detector0Config.bbox_x0 = 0
-        detector0Config.bbox_x1 = 2048
+        detector0Config.bbox_x1 = 2168
         detector0Config.bbox_y0 = 0
         detector0Config.bbox_y1 = 2048
         detector0Config.pixelSize_x = 0.01  # in mm

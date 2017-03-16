@@ -85,6 +85,7 @@ class Ctio0m9IsrTask(ip_isr.IsrTask):
 
     
         for amp in ccd:
+            print('Amplifier in CCD : %s \n '%(amp))
             # if ccdExposure is one amp, check for coverage to prevent performing ops multiple times
             if ccdExposure.getBBox().contains(amp.getBBox()):
                 ampExposure = ccdExposure.Factory(ccdExposure, amp.getBBox())
@@ -118,6 +119,9 @@ class Ctio0m9IsrTask(ip_isr.IsrTask):
             exposure=ccdExposure,
         )
 
+# Mail from Simon
+#if the amp images are all in one extension, you should be able to use the stock IsrTask rather than a custom one.  You may need to override it for a different reason, but I don't believe you should have to build the ampDict by hand in this case.
+    
     @pipe_base.timeMethod
     def runDataRef(self, sensorRef):
         """!Perform instrument signature removal on a ButlerDataRef of a Sensor
@@ -134,15 +138,18 @@ class Ctio0m9IsrTask(ip_isr.IsrTask):
         self.log.info("Performing ISR on sensor %s" % (sensorRef.dataId))
         # We should probably loop over this using the butler.
         ampDict = {}
+
+
+        sensorRef.get()   # get what?
     
-
-
+            
         for channel in range(0,4):
             sensorRef.dataId['channel'] = channel
             print('sensorRef : %s \n '%(sensorRef.dataId['ccd']))
             
             ampExposure = sensorRef.get('raw_amp', immediate=True)
             ampExposure = self.convertIntToFloat(ampExposure)
+            print('ampExposure : %s \n '%(ampExposure))
             # assumes amps are in order of the channels
             amp = ampExposure.getDetector()[channel]
             print('amp : %s \n '%(amp.getName()))
