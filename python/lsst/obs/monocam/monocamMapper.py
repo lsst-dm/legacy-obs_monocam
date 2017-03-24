@@ -27,13 +27,15 @@ import lsst.afw.image as afwImage
 from lsst.afw.fits import readMetadata
 from lsst.obs.base import CameraMapper
 from lsst.daf.persistence import Policy
-from .monocam import Monocam
+from .monocam import Monocam, MakeMonocamRawVisitInfo
 
 __all__ = ["MonocamMapper"]
 
 
 class MonocamMapper(CameraMapper):
     packageName = 'obs_monocam'
+
+    MakeRawVisitInfoClass = MakeMonocamRawVisitInfo
 
     def __init__(self, inputPolicy=None, **kwargs):
         policyFile = Policy.DefaultPolicyFile(self.packageName, "monocamMapper.yaml", "policy")
