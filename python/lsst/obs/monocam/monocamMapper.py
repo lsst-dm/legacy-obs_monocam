@@ -130,7 +130,7 @@ class MonocamMapper(CameraMapper):
         md = self.bypass_raw_md(datasetType, pythonType, location, dataId)
         image = afwImage.DecoratedImageU(filename)
         image.setMetadata(md)
-        return self.std_raw(image, dataId)
+        return image
 
     def bypass_raw_md(self, datasetType, pythonType, location, dataId):
         """Read metadata for raw image, adding fake Wcs"""
