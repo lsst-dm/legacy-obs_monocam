@@ -53,7 +53,7 @@ class MonocamMapper(CameraMapper):
                 'object': str,
                 'imageType': str,
                 }
-        for name in ("raw", "raw_amp",
+        for name in ("raw", "raw_amp", 
                      # processCcd outputs
                      "postISRCCD", "calexp", "postISRCCD", "src", "icSrc", "srcMatch",
                      ):
@@ -141,6 +141,7 @@ class MonocamMapper(CameraMapper):
     bypass_raw_amp = bypass_raw
     bypass_raw_amp_md = bypass_raw_md
 
+#    def standardizeCalib(self, item, datasetType, pythonType, location, dataId):
     def standardizeCalib(self, dataset, item, dataId):
         """Standardize a calibration image read in by the butler
 
@@ -153,6 +154,7 @@ class MonocamMapper(CameraMapper):
                        flexibility)
         @return standardized Exposure
         """
+        md = item.getMetadata()
         mapping = self.calibrations[dataset]
         if "MaskedImage" in mapping.python:
             exp = afwImage.makeExposure(item)
@@ -164,21 +166,44 @@ class MonocamMapper(CameraMapper):
             exp = item
         else:
             raise RuntimeError("Unrecognised python type: %s" % mapping.python)
-
+        
+#        filename = location.getLocations()[0]
+#        md = self.bypass_raw_md(datasetType, pythonType, location, dataId)
+#        print(md.paramNames())
+        exposureId = self._computeCcdExposureId(dataId)
+        visitInfo = self.makeRawVisitInfo(md=md, exposureId=exposureId)
+        exp.getInfo().setVisitInfo(visitInfo)
+            
         parent = super(CameraMapper, self)
         if hasattr(parent, "std_" + dataset):
             return getattr(parent, "std_" + dataset)(exp, dataId)
         return self._standardizeExposure(mapping, exp, dataId)
 
-    def std_bias(self, item, dataId):
+    def bypass_bias(self, datasetType, pythonType, location, dataId):
+        filename = location.getLocations()[0]
+        md = self.bypass_raw_md(datasetType, pythonType, location, dataId)
+        item = afwImage.DecoratedImageF(filename)
+        item.setMetadata(md)
+#        return item
         return self.standardizeCalib("bias", item, dataId)
+
+#    def std_bias(self, item, dataId):
+#        return self.standardizeCalib("bias", item, dataId)
 
     def std_dark(self, item, dataId):
         exp = self.standardizeCalib("dark", item, dataId)
         return exp
-
-    def std_flat(self, item, dataId):
+    
+    def bypass_flat(self, datasetType, pythonType, location, dataId):
+        filename = location.getLocations()[0]
+        md = self.bypass_raw_md(datasetType, pythonType, location, dataId)
+        item = afwImage.DecoratedImageF(filename)
+        item.setMetadata(md)
+#        return item
         return self.standardizeCalib("flat", item, dataId)
+
+#    def std_flat(self, item, dataId):
+#        return self.standardizeCalib("flat", item, dataId)
 
     def std_fringe(self, item, dataId):
         return self.standardizeCalib("flat", item, dataId)

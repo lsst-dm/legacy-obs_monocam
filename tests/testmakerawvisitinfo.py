@@ -19,22 +19,22 @@ from lsst.afw.geom import degrees, Angle
 
 import pyfits
 
-datadir = getPackageDir("obs_monocam") + "/tests/"
-raw = datadir + "raw/lsst1532+1/SDSSG/2016-05-04lsst1532+13_scienceII_01.fits" # visit number 33
-bias = datadir + "raw/BIAS/OPEN/2016-05-05morningbias_50.fits"
-flat = datadir + "raw/FLAT/SDSSG/2016-05-05flat_G.fits"
+datadir = os.path.join(getPackageDir("obs_monocam"), "tests", "data")
+raw = datadir + "/raw/lsst1532+1/SDSSG/2016-05-04lsst1532+13_scienceII_01.fits" # visit number 33
+bias = datadir + "/bias/2016-05-05/bias-2016-05-05.fits.gz"
+flat = datadir + "/flat/SDSSG/2016-05-05/flat_SDSSG_2016-05-05.fits.gz"
 
 fitslist = [raw, bias, flat]
-fitsvisit = []
+fitsdate, fitsfilter = [], []
 for fits in fitslist:
-    hdulist = pyfits.open(fits)
+    hdulist = pyfits.open(raw)
     hdulist.close()
     prihdr = hdulist[0].header
-    fitsvisit.append(prihdr['VISIT'])
-
-hdulist = pyfits.open(raw)
-hdulist.close()
-prihdr = hdulist[0].header
+    if fits == raw:
+        rawfitsvisit = prihdr['VISIT']
+    else:
+        fitsdate.append(prihdr["DATE-OBS"])
+        fitsfilter.append(prihdr["FILTER"])
 
 nanFloat = float("nan")
 nanAngle = Angle(nanFloat)
@@ -67,11 +67,10 @@ class GetRawTestCase(lsst.utils.tests.TestCase):
     
     def setUp(self):
         self.repoPath = datadir
-        calibPath = os.path.join(datadir, "data/calib")
         self.butler = dafPersist.Butler(root=self.repoPath)
         
         self.size = (544, 2048)
-        self.dataId = {'visit': fitsvisit[0], 'ccdnum': 0}
+        self.dataId = {'visit': rawfitsvisit, 'ccdnum': 0}
         self.filter = "g"
     
     def testPackageName(self):
@@ -80,7 +79,7 @@ class GetRawTestCase(lsst.utils.tests.TestCase):
 
     def testRaw(self):
         """Test retrieval of raw image"""
-        exp = self.butler.get("raw", visit=fitsvisit[0])
+        exp = self.butler.get("raw", visit = rawfitsvisit)
 
         print("dataId: %s" % self.dataId)
         print("width: %s" % exp.getWidth())
@@ -119,13 +118,13 @@ class GetRawTestCase(lsst.utils.tests.TestCase):
         
     def testBias(self):
         """Test retrieval of bias image"""
-        exp = self.butler.get("raw", visit=fitsvisit[1])
+        exp = self.butler.get("bias", filter=fitsfilter[0], date = fitsdate[0][:10])
         print("detector id: %s" % exp.getDetector().getId())
         self.assertEqual(exp.getDetector().getId(), self.dataId["ccdnum"])
         
     def testFlat(self):
         """Test retrieval of flat image"""
-        exp = self.butler.get("raw", visit=fitsvisit[2])
+        exp = self.butler.get("flat", filter=fitsfilter[1], date = fitsdate[1][:10])
         print("detector id: %s" % exp.getDetector().getId())
         print("filter: %s" % self.filter)
         self.assertEqual(exp.getDetector().getId(), self.dataId["ccdnum"])

@@ -97,7 +97,7 @@ class MonocamIsrTask(ip_isr.IsrTask):
         # Where it's negative, set it to a robust measure of the variance on
         # the image.
         variance = ccdExposure.getMaskedImage().getVariance().getArray()
-        quartiles = numpy.percentiles(ccdExposure.getMaskedImage().getImage().getArray(), [25.0, 75.0])
+        quartiles = numpy.percentile(ccdExposure.getMaskedImage().getImage().getArray(), [25.0, 75.0])
         stdev = 0.74*(quartiles[1] - quartiles[0])
         variance[:] = numpy.where(variance > 0, variance, stdev**2)
 
