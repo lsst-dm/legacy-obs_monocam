@@ -27,16 +27,11 @@ import lsst.utils.tests
 from lsst.utils import getPackageDir
 from lsst.afw.geom import Extent2I
 import lsst.obs.base.tests
-import lsst.obs.test
 from lsst.afw.coord import IcrsCoord
-
-import pyfits
-
 
 class TestObsTest(lsst.obs.base.tests.ObsTests, lsst.utils.tests.TestCase):
     def setUp(self):
         product_dir = getPackageDir('obs_monocam')
-#        data_dir = os.path.join(product_dir, 'data', 'input')
         data_dir = os.path.join(getPackageDir("obs_monocam"), "tests", "data")
         raw = data_dir + "/raw/lsst1532+1/SDSSG/2016-05-04lsst1532+13_scienceII_01.fits" # visit number 33
         bias = data_dir + "/bias/2016-05-05/bias-2016-05-05.fits.gz"
@@ -49,23 +44,11 @@ class TestObsTest(lsst.obs.base.tests.ObsTests, lsst.utils.tests.TestCase):
         exptime = [300.0004, 0.0, 50.0]
         ra = '15:32:09.78'
         dec = '+13:56:15.6'
-#        fitsvisit, fitsdate, fitsfilter, exptime = [], [], [], []
-#        for fits in fitslist:
-#            hdulist = pyfits.open(fits)
-#            hdulist.close()
-#            prihdr = hdulist[0].header
-#            fitsvisit.append(prihdr['VISIT'])
-#            fitsdate.append(prihdr["DATE-OBS"])
-#            fitsfilter.append(prihdr["FILTER"])
-#            exptime.append(prihdr["EXPTIME"])
-#            if fits == raw:
-#                ra = prihdr["RA"]
-#                dec = prihdr["DEC"]
 
         butler = lsst.daf.persistence.Butler(root=data_dir)
-        mapper = lsst.obs.test.TestMapper(root=data_dir)
+        mapper = lsst.obs.monocam.MonocamMapper(root=data_dir)
        
-        dataIds = {'raw': {'visit': fitsvisit[0], 'filter': fitsfilter[0]},
+        dataIds = {'raw':  {'visit': fitsvisit[0], 'filter': fitsfilter[0], 'date': fitsdate[0][:10]},
                    'bias': {'visit': fitsvisit[1], 'filter': fitsfilter[1], 'date': fitsdate[1][:10]},
                    'flat': {'visit': fitsvisit[2], 'filter': fitsfilter[2], 'date': fitsdate[2][:10]},
                    'dark': unittest.SkipTest
@@ -85,11 +68,7 @@ class TestObsTest(lsst.obs.base.tests.ObsTests, lsst.utils.tests.TestCase):
                       }
         sky_origin = IcrsCoord(ra, dec)
         sky_origin = (sky_origin[0].asDegrees(), sky_origin[1].asDegrees())
-#        raw_subsets = (({'level': 'sensor', 'filter': fitsfilter[0]}, 2),
-#                       ({'level': 'sensor', 'visit': fitsvisit[0]}, 1),
-#                       ({'level': 'filter', 'visit': fitsvisit[0]}, 1),
-#                       ({'level': 'visit', 'filter': fitsfilter[0]}, 2)
-#                       )
+
         raw_subsets = (({'filter': fitsfilter[0]}, 1), ({'filter': fitsfilter[0]}, 1), ({'filter': fitsfilter[0]}, 1))
         linearizer_type = unittest.SkipTest
         self.setUp_butler_get(ccdExposureId_bits=ccdExposureId_bits,
@@ -105,8 +84,11 @@ class TestObsTest(lsst.obs.base.tests.ObsTests, lsst.utils.tests.TestCase):
                               linearizer_type=linearizer_type
                               )
 
-        path_to_raw = os.path.join(data_dir, "raw", "lsst1532+1", "SDSSG", "2016-05-04lsst1532+13_scienceII_01.fits")
-        keys = set(('filter', 'name', 'patch', 'tract', 'visit', 'pixel_id'))
+#        path_to_raw = os.path.join(data_dir, "raw", "lsst1532+1", "SDSSG", "2016-05-04lsst1532+13_scienceII_01.fits")
+        path_to_raw = os.path.join(data_dir, "raw_fits", "2016-05-04lsst1532+13_scienceII_01.fits.gz")
+#        keys = set(('filter', 'name', 'patch', 'tract', 'visit', 'pixel_id'))
+        keys = set(('calibDate', 'basename', 'object', 'channel', 'filter', 'name', 'patch', 'tract', 'visit', 'pixel_id'))
+
         query_format = ["visit", "filter"]
 #        queryMetadata = (({'visit': fitsvisit[0]}, [(1, 'g')]),
 #                         ({'visit': fitsvisit[1]}, [(2, 'g')]),
@@ -123,13 +105,28 @@ class TestObsTest(lsst.obs.base.tests.ObsTests, lsst.utils.tests.TestCase):
         map_cpp_type = 'DecoratedImageU'
         map_storage_name = 'FitsStorage'
         metadata_output_path = os.path.join(data_dir, 'processCcd_metadata', 'v' + str(fitsvisit[0]) + '_f' + fitsfilter[0] + '.boost')
-        raw_filename = 'raw_v' + str(fitsvisit[0]) + '_f' + fitsfilter[0] + '.fits.gz'
-#        raw_filename = '2016-05-04lsst1532+13_scienceII_01.fits'
+        raw_filename = '2016-05-04lsst1532+13_scienceII_01.fits'
         default_level = 'visit'
-        raw_levels = (('skyTile', set(['filter'])),
-                      ('filter', set(['filter', 'visit'])),
-                      ('visit', set(['filter', 'visit']))
-                      )
+        raw_levels = (
+            ('raw', set({'basename': str, 
+                'visit': int,
+                'ccd': int,
+                'filter': str,
+                'date': str,
+                'expTime': float,
+                'object': str,
+                'imageType': str,
+                })), 
+                 ('raw_amp', set({'basename': str, 'visit': int,
+                'ccd': int,
+                'filter': str,
+                'date': str,
+                'expTime': float,
+                'object': str,
+                'imageType': str,
+                }))                      
+        )
+        
         self.setUp_mapper(output=data_dir,
                           path_to_raw=path_to_raw,
                           keys=keys,

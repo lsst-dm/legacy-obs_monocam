@@ -25,24 +25,30 @@ bias = datadir + "/bias/2016-05-05/bias-2016-05-05.fits.gz"
 flat = datadir + "/flat/SDSSG/2016-05-05/flat_SDSSG_2016-05-05.fits.gz"
 
 fitslist = [raw, bias, flat]
-fitsdate, fitsfilter = [], []
+fitsdate, fitsfilter, fitsvisit = [], [], []
+
+fitsvisit, fitsdate, fitsfilter, exptime = [], [], [], []
 for fits in fitslist:
-    hdulist = pyfits.open(raw)
+    hdulist = pyfits.open(fits)
     hdulist.close()
     prihdr = hdulist[0].header
-    if fits == raw:
-        rawfitsvisit = prihdr['VISIT']
-    else:
-        fitsdate.append(prihdr["DATE-OBS"])
-        fitsfilter.append(prihdr["FILTER"])
+    fitsvisit.append(prihdr['VISIT'])
+    fitsdate.append(prihdr["DATE-OBS"])
+    fitsfilter.append(prihdr["FILTER"])
+
+hdulist = pyfits.open(raw)
+hdulist.close()
+prihdr = hdulist[0].header
 
 nanFloat = float("nan")
 nanAngle = Angle(nanFloat)
+era = nanAngle
+
 
 boresightRaDec = IcrsCoord(prihdr["RA"], prihdr["DEC"])
 
-era = nanAngle
 
+prihdr = hdulist[0].header
 raw_visit_info = {
     "dateAvg": DateTime(prihdr["DATE-OBS"], DateTime.TAI),
     "exposureTime": prihdr["EXPTIME"],
@@ -70,7 +76,7 @@ class GetRawTestCase(lsst.utils.tests.TestCase):
         self.butler = dafPersist.Butler(root=self.repoPath)
         
         self.size = (544, 2048)
-        self.dataId = {'visit': rawfitsvisit, 'ccdnum': 0}
+        self.dataId = {'visit': fitsvisit[0], 'ccdnum': 0}
         self.filter = "g"
     
     def testPackageName(self):
@@ -79,7 +85,7 @@ class GetRawTestCase(lsst.utils.tests.TestCase):
 
     def testRaw(self):
         """Test retrieval of raw image"""
-        exp = self.butler.get("raw", visit = rawfitsvisit)
+        exp = self.butler.get("raw", visit = fitsvisit[0])
 
         print("dataId: %s" % self.dataId)
         print("width: %s" % exp.getWidth())
@@ -118,13 +124,13 @@ class GetRawTestCase(lsst.utils.tests.TestCase):
         
     def testBias(self):
         """Test retrieval of bias image"""
-        exp = self.butler.get("bias", filter=fitsfilter[0], date = fitsdate[0][:10])
+        exp = self.butler.get("bias", visit = fitsvisit[1], filter=fitsfilter[1], date = fitsdate[1][:10])
         print("detector id: %s" % exp.getDetector().getId())
         self.assertEqual(exp.getDetector().getId(), self.dataId["ccdnum"])
         
     def testFlat(self):
         """Test retrieval of flat image"""
-        exp = self.butler.get("flat", filter=fitsfilter[1], date = fitsdate[1][:10])
+        exp = self.butler.get("flat", visit = fitsvisit[2], filter=fitsfilter[2], date = fitsdate[2][:10])
         print("detector id: %s" % exp.getDetector().getId())
         print("filter: %s" % self.filter)
         self.assertEqual(exp.getDetector().getId(), self.dataId["ccdnum"])
