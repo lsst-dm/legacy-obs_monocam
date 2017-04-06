@@ -5,21 +5,33 @@ import os.path
 
 from lsst.utils import getPackageDir
 from lsst.obs.monocam import MonocamIsrTask
+from lsst.meas.algorithms import LoadIndexedReferenceObjectsTask
 
 obsConfigDir = os.path.join(getPackageDir("obs_monocam"), "config")
 
 config.isr.retarget(MonocamIsrTask)
 config.isr.load(os.path.join(obsConfigDir, "isr.py"))
 
-config.charImage.repair.doCosmicRay = False
+config.charImage.repair.doCosmicRay = True
 config.charImage.repair.cosmicray.nCrPixelMax = 1000000
 
 config.charImage.background.binSize = 128
-config.charImage.detectAndMeasure.detection.background.binSize = 128
-config.calibrate.detectAndMeasure.detection.background.binSize = 128
+config.charImage.detection.background.binSize = 128
+config.calibrate.detection.background.binSize = 128
 config.charImage.background.useApprox = False
-config.charImage.detectAndMeasure.detection.background.useApprox = False
-config.calibrate.detectAndMeasure.detection.background.useApprox = False
+config.charImage.detection.background.useApprox = False
+config.calibrate.detection.background.useApprox = False
+
+config.charImage.refObjLoader.retarget(LoadIndexedReferenceObjectsTask)
+config.calibrate.astromRefObjLoader.retarget(LoadIndexedReferenceObjectsTask)
+config.calibrate.photoRefObjLoader.retarget(LoadIndexedReferenceObjectsTask)
+
+config.calibrate.astromRefObjLoader.filterMap = {'SDSSG':'G',  'SDSSR':'R', 'SDSSI':'I', 'SDSSZ':'Z'}
+config.calibrate.photoRefObjLoader.filterMap = {'SDSSG':'G', 'SDSSR':'R', 'SDSSI':'I', 'SDSSZ':'Z'}
+config.charImage.refObjLoader.filterMap = {'SDSSG':'G', 'SDSSR':'R', 'SDSSI':'I', 'SDSSZ':'Z'}
+
+config.calibrate.astrometry.matcher.numBrightStars=200
+config.calibrate.photoCal.matcher.numBrightStars=200
 
 # PSFEx gives better PSFs for HSC
 try:

@@ -25,9 +25,10 @@ import numpy
 import lsst.afw.image
 import lsst.ip.isr as ip_isr
 import lsst.pipe.base as pipe_base
+from lsst.obs.base import MakeRawVisitInfo
 
 
-class MonocamIsrTask(ip_isr.IsrTask):
+class MonocamIsrTask(ip_isr.IsrTask, MakeRawVisitInfo):
 
     @pipe_base.timeMethod
     def run(self, ccdExposure, bias=None, dark=None, flat=None, defects=None, fringes=None, bfKernel=None,
@@ -141,7 +142,8 @@ class MonocamIsrTask(ip_isr.IsrTask):
         ampDict = {}
         for channel in range(16):
             sensorRef.dataId['channel'] = channel+1  # to get the correct channel
-            ampExposure = sensorRef.get('raw_amp', immediate=True)
+#            ampExposure = sensorRef.get('raw_amp', immediate=True)
+            ampExposure = sensorRef.get('raw', immediate=True)
             ampExposure = self.convertIntToFloat(ampExposure)
             # assumes amps are in order of the channels
             amp = ampExposure.getDetector()[channel]
@@ -151,7 +153,9 @@ class MonocamIsrTask(ip_isr.IsrTask):
             ampDict[amp.getName()] = ampExposure
 
         ccdExposure = self.assembleCcd.assembleCcd(ampDict)
+
         isrData = self.readIsrData(sensorRef, ccdExposure)
+
         result = self.run(ccdExposure, **isrData.getDict())
 
         if self.config.doWrite:
