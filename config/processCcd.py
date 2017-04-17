@@ -31,7 +31,8 @@ if True:
     config.doCalibrate = False
 elif False:
     # Running on sky data from USNO
-    from lsst.meas.astrom import ANetAstrometryTask  # We need to blind-solve because we don't trust the Wcs
+    # We need to blind-solve because we don't trust the Wcs
+    from lsst.meas.extensions.astrometryNet import ANetAstrometryTask
     config.calibrate.astrometry.retarget(ANetAstrometryTask)
     for ff in "griz":
         config.calibrate.astrometry.solver.filterMap["SDSS" + ff.upper()] = ff
