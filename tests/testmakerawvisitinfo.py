@@ -25,16 +25,16 @@ bias = datadir + "/bias/2016-05-05/bias-2016-05-05.fits.gz"
 flat = datadir + "/flat/SDSSG/2016-05-05/flat_SDSSG_2016-05-05.fits.gz"
 
 fitslist = [raw, bias, flat]
-fitsdate, fitsfilter, fitsvisit = [], [], []
-
 fitsvisit, fitsdate, fitsfilter, exptime = [], [], [], []
+
 for fits in fitslist:
-    hdulist = pyfits.open(fits)
-    hdulist.close()
-    prihdr = hdulist[0].header
-    fitsvisit.append(prihdr['VISIT'])
-    fitsdate.append(prihdr["DATE-OBS"])
-    fitsfilter.append(prihdr["FILTER"])
+    if fits == raw:
+        hdulist = pyfits.open(fits)
+        hdulist.close()
+        prihdr = hdulist[0].header
+        fitsvisit.append(prihdr['VISIT'])
+        fitsdate.append(prihdr["DATE-OBS"])
+        fitsfilter.append(prihdr["FILTER"])
 
 hdulist = pyfits.open(raw)
 hdulist.close()
@@ -44,9 +44,7 @@ nanFloat = float("nan")
 nanAngle = Angle(nanFloat)
 era = nanAngle
 
-
 boresightRaDec = IcrsCoord(prihdr["RA"], prihdr["DEC"])
-
 
 prihdr = hdulist[0].header
 raw_visit_info = {
@@ -124,13 +122,15 @@ class GetRawTestCase(lsst.utils.tests.TestCase):
         
     def testBias(self):
         """Test retrieval of bias image"""
-        exp = self.butler.get("bias", visit = fitsvisit[1], filter=fitsfilter[1], date = fitsdate[1][:10])
+#        exp = self.butler.get("bias", visit = fitsvisit[1], filter=fitsfilter[1], date = fitsdate[1][:10])
+        exp = self.butler.get("bias", filter="NONE", date="2016-05-05")
         print("detector id: %s" % exp.getDetector().getId())
         self.assertEqual(exp.getDetector().getId(), self.dataId["ccdnum"])
         
     def testFlat(self):
         """Test retrieval of flat image"""
-        exp = self.butler.get("flat", visit = fitsvisit[2], filter=fitsfilter[2], date = fitsdate[2][:10])
+#        exp = self.butler.get("flat", visit = fitsvisit[2], filter=fitsfilter[2], date = fitsdate[2][:10])
+        exp = self.butler.get("flat", filter="SDSSG")
         print("detector id: %s" % exp.getDetector().getId())
         print("filter: %s" % self.filter)
         self.assertEqual(exp.getDetector().getId(), self.dataId["ccdnum"])

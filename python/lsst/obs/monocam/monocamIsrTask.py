@@ -142,8 +142,8 @@ class MonocamIsrTask(ip_isr.IsrTask, MakeRawVisitInfo):
         ampDict = {}
         for channel in range(16):
             sensorRef.dataId['channel'] = channel+1  # to get the correct channel
-#            ampExposure = sensorRef.get('raw_amp', immediate=True)
-            ampExposure = sensorRef.get('raw', immediate=True)
+            ampExposure = sensorRef.get('raw_amp', immediate=True)
+#            ampExposure = sensorRef.get('raw', immediate=True)
             ampExposure = self.convertIntToFloat(ampExposure)
             # assumes amps are in order of the channels
             amp = ampExposure.getDetector()[channel]

@@ -239,7 +239,11 @@ class MakeMonocamRawVisitInfo(MakeRawVisitInfo):
         """
         argDict["exposureTime"] = self.popFloat(md, "EXPTIME")
         argDict["date"] = self.getDateAvg(md=md, exposureTime=argDict["exposureTime"])
-        if md.get('OBJECT') not in ['DARK', 'FLAT', 'BIAS']:
+        try:
+            isRaw = md.get('OBJECT') not in ['DARK', 'FLAT', 'BIAS']
+        except Exception:
+            isRaw = False
+        if isRaw:
             argDict["darkTime"] = self.popFloat(md, "DARKTIME")
             argDict["boresightRaDec"] = IcrsCoord(
                 self.popAngle(md, "RA_DEG"),

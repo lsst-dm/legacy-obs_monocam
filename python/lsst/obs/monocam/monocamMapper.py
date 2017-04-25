@@ -28,6 +28,7 @@ from lsst.afw.fits import readMetadata
 from lsst.obs.base import CameraMapper
 from lsst.daf.persistence import Policy
 from .monocam import Monocam, MakeMonocamRawVisitInfo
+import inspect
 
 __all__ = ["MonocamMapper"]
 
@@ -125,7 +126,6 @@ class MonocamMapper(CameraMapper):
 
     def bypass_raw(self, datasetType, pythonType, location, dataId):
         """Read raw image with hacked metadata"""
-        
         filename = location.getLocations()[0]
         md = self.bypass_raw_md(datasetType, pythonType, location, dataId)
         image = afwImage.DecoratedImageU(filename)
@@ -138,11 +138,33 @@ class MonocamMapper(CameraMapper):
         md = readMetadata(filename, 1)  # 1 = PHU
         return md
     
+#    def bypass_raw_amp(self, datasetType, pythonType, location, dataId):
+#        """Read raw image with hacked metadata"""
+#        print(inspect.stack()[1:5])
+#        filename = location.getLocations()[0]
+#        md = self.bypass_raw_amp_md(datasetType, pythonType, location, dataId)
+#        image = afwImage.DecoratedImageU(filename)
+#        image.setMetadata(md)
+#        return image
     
-
+#    def bypass_raw_amp_md(self, datasetType, pythonType, location, dataId):
+#        """Read metadata for raw image, adding fake Wcs"""
+#        filename = location.getLocations()[0]
+#        md = afwImage.readMetadata(filename, 1)  # 1 = PHU
+#        return md
+#    
+    def std_raw_amp(self, item, dataId):
+        """Standardize a raw dataset by converting it to an Exposure instead of an Image"""
+        exposure = exposureFromImage(item)
+        exposureId = self._computeCcdExposureId(dataId)
+        md = exposure.getMetadata()
+        visitInfo = self.makeRawVisitInfo(md=md, exposureId=exposureId)
+        exposure.getInfo().setVisitInfo(visitInfo)
+        return self._standardizeExposure(self.exposures['raw_amp'], exposure, dataId,
+                               trimmed=False)
+    
     bypass_raw_amp = bypass_raw
     bypass_raw_amp_md = bypass_raw_md
-
 #    def standardizeCalib(self, item, datasetType, pythonType, location, dataId):
     def standardizeCalib(self, dataset, item, dataId):
         """Standardize a calibration image read in by the butler
@@ -168,8 +190,10 @@ class MonocamMapper(CameraMapper):
             exp = item
         else:
             raise RuntimeError("Unrecognised python type: %s" % mapping.python)
-
-        exposureId = self._computeCcdExposureId(dataId)
+        try:
+            exposureId = self._computeCcdExposureId(dataId)
+        except:
+            exposureId = 20000
         visitInfo = self.makeRawVisitInfo(md=md, exposureId=exposureId)
         exp.getInfo().setVisitInfo(visitInfo)
             
@@ -205,3 +229,32 @@ class MonocamMapper(CameraMapper):
 
     def std_fringe(self, item, dataId):
         return self.standardizeCalib("flat", item, dataId)
+    
+def exposureFromImage(image):
+    """Generate an Exposure from an image-like object
+
+    If the image is a DecoratedImage then also set its WCS and metadata
+    (Image and MaskedImage are missing the necessary metadata
+    and Exposure already has those set)
+
+    @param[in] image  Image-like object (lsst.afw.image.DecoratedImage, Image, MaskedImage or Exposure)
+    @return (lsst.afw.image.Exposure) Exposure containing input image
+    """
+    if hasattr(image, "getVariance"):
+    # MaskedImage
+        exposure = afwImage.makeExposure(image)
+    elif hasattr(image, "getImage"):
+    # DecoratedImage
+        exposure = afwImage.makeExposure(afwImage.makeMaskedImage(image.getImage()))
+        metadata = image.getMetadata()
+        wcs = afwImage.makeWcs(metadata, True)
+        exposure.setWcs(wcs)
+        exposure.setMetadata(metadata)
+    elif hasattr(image, "getMaskedImage"):
+    # Exposure
+        exposure = image
+    else:
+    # Image
+        exposure = afwImage.makeExposure(afwImage.makeMaskedImage(image))
+
+    return exposure

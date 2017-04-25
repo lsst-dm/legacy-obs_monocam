@@ -41,7 +41,7 @@ class TestObsTest(lsst.obs.base.tests.ObsTests, lsst.utils.tests.TestCase):
         fitsvisit = [33, 100008, 10005]
         fitsdate = ['2016-05-04T07:37:53.225', '2016-05-05T12:44:09.441', '2016-05-05T03:17:08.930']
         fitsfilter = ['SDSSG', 'OPEN', 'SDSSG']
-        exptime = [300.0004, 0.0, 50.0]
+        exptime = [300.0004, float('nan'), float('nan')]
         ra = '15:32:09.78'
         dec = '+13:56:15.6'
 
@@ -63,8 +63,8 @@ class TestObsTest(lsst.obs.base.tests.ObsTests, lsst.utils.tests.TestCase):
         detector_names = {'raw': '0', 'bias': '0', 'flat': '0'}
         detector_serials = {'raw': 'abcd1234', 'bias': 'abcd1234', 'flat': 'abcd1234'}
         dimensions = {'raw': Extent2I(544, 2048),
-                      'bias': Extent2I(544, 2048),
-                      'flat': Extent2I(544, 2048)
+                      'bias': Extent2I(4096, 4004),
+                      'flat': Extent2I(4096, 4004)
                       }
         sky_origin = IcrsCoord(ra, dec)
         sky_origin = (sky_origin[0].asDegrees(), sky_origin[1].asDegrees())
