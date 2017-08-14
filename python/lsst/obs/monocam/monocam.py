@@ -24,7 +24,6 @@ import numpy
 import lsst.afw.cameraGeom as cameraGeom
 import lsst.afw.geom as afwGeom
 from lsst.afw.table import AmpInfoCatalog, AmpInfoTable, LL
-from lsst.afw.cameraGeom.cameraFactory import makeDetector
 
 
 class Monocam(cameraGeom.Camera):
@@ -98,8 +97,8 @@ class Monocam(cameraGeom.Camera):
         detectorConfigList = self._makeDetectorConfigList()
         for detectorConfig in detectorConfigList:
             ampInfoCatalog = self._makeAmpInfoCatalog()
-            detector = makeDetector(detectorConfig, ampInfoCatalog, focalPlaneToFieldAngle,
-                                    plateScale.asArcseconds())
+            detector = afwGeom.makeDetector(detectorConfig, ampInfoCatalog, focalPlaneToFieldAngle,
+                                            plateScale.asArcseconds())
             detectorList.append(detector)
         return detectorList
 
