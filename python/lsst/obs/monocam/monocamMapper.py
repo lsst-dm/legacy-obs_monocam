@@ -24,6 +24,7 @@
 import lsst.afw.image.utils as afwImageUtils
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
+from lsst.afw.fits import readMetadata
 from lsst.obs.base import CameraMapper
 import lsst.pex.policy as pexPolicy
 from .monocam import Monocam
@@ -126,7 +127,7 @@ class MonocamMapper(CameraMapper):
     def bypass_raw_md(self, datasetType, pythonType, location, dataId):
         """Read metadata for raw image, adding fake Wcs"""
         filename = location.getLocations()[0]
-        md = afwImage.readMetadata(filename, 1)  # 1 = PHU
+        md = readMetadata(filename, 1)  # 1 = PHU
         return md
 
     bypass_raw_amp = bypass_raw
