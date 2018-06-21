@@ -48,12 +48,12 @@ from lsst.afw.image import readMetadata
 
 
 def extractor(keyword, valueType=str):
-    return lambda md: valueType(md.get(keyword))
+    return lambda md: valueType(md.getScalar(keyword))
 
 
 def sexagesimal(keyword, multiplier=1.0):
     def translator(md):
-        sex = md.get(keyword)
+        sex = md.getScalar(keyword)
         if sex[0] in "+-":
             sign = -1 if sex[0] == "-" else +1
             sex = sex[1:]
@@ -64,7 +64,7 @@ def sexagesimal(keyword, multiplier=1.0):
     return translator
 
 SHUTTER = {
-    "date": ('TEXT', lambda md: md.get("DATE-OBS") + "T" + md.get("UTC")),
+    "date": ('TEXT', lambda md: md.getScalar("DATE-OBS") + "T" + md.getScalar("UTC")),
     "object": ('TEXT', extractor("OBJECT")),
     "type": ('TEXT', extractor("IMAGETYP")),
     "filter": ('TEXT', extractor("FILTER")),

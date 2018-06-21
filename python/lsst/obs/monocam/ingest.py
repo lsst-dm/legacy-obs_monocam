@@ -30,7 +30,7 @@ class MonocamCalibsParseTask(CalibsParseTask):
 
     def _translateFromCalibId(self, field, md):
         """Get a value from the CALIB_ID written by constructCalibs"""
-        data = md.get("CALIB_ID")
+        data = md.getScalar("CALIB_ID")
         match = re.search(".*%s=(\S+)" % field, data)
         return match.groups()[0]
 
