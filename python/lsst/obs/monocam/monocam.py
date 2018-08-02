@@ -170,11 +170,13 @@ class Monocam(cameraGeom.Camera):
                     record.setBBox(afwGeom.Box2I(
                         afwGeom.Point2I(ampX*xDataExtent, ampY*yDataExtent),
                         afwGeom.Extent2I(xDataExtent, yDataExtent),
+                        invert=False
                     ))
                 else:
                     record.setBBox(afwGeom.Box2I(
                         afwGeom.Point2I((7 - ampX)*xDataExtent, ampY*yDataExtent),
                         afwGeom.Extent2I(xDataExtent, yDataExtent),
+                        invert=False
                     ))
 
                 readCorner = LL  # in raw frames; always LL because raws are in amp coords
@@ -186,18 +188,22 @@ class Monocam(cameraGeom.Camera):
                 record.setRawBBox(afwGeom.Box2I(
                     afwGeom.Point2I(0, 0),
                     afwGeom.Extent2I(xRawExtent, yRawExtent),
+                    invert=False,
                 ))
                 record.setRawDataBBox(afwGeom.Box2I(
                     afwGeom.Point2I(x0Data, y0Data),
                     afwGeom.Extent2I(xDataExtent, yDataExtent),
+                    invert=False,
                 ))
                 record.setRawHorizontalOverscanBBox(afwGeom.Box2I(
                     afwGeom.Point2I(x0Bias, y0Data),
                     afwGeom.Extent2I(h_overscan, yDataExtent),
+                    invert=False,
                 ))
                 record.setRawVerticalOverscanBBox(afwGeom.Box2I(
                     afwGeom.Point2I(x0Data, y0Data+yDataExtent),
                     afwGeom.Extent2I(xDataExtent, v_overscan),
+                    invert=False,
                 ))
                 record.setRawXYOffset(afwGeom.Extent2I(ampX*xRawExtent, ampY*yRawExtent))
                 record.setReadoutCorner(readCorner)
