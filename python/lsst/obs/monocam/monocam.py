@@ -79,7 +79,7 @@ class Monocam(cameraGeom.Camera):
         radialDistortion = 0.  # radial distortion in mm/rad^2
         radialCoeff = numpy.array((0.0, 1.0, 0.0, radialDistortion)) / plateScale.asRadians()
         focalPlaneToFieldAngle = afwGeom.makeRadialTransform(radialCoeff)
-        fieldAngleToFocalPlane = focalPlaneToFieldAngle.getInverse()
+        fieldAngleToFocalPlane = focalPlaneToFieldAngle.inverted()
         cameraTransformMap = cameraGeom.TransformMap(cameraGeom.FOCAL_PLANE,
                                                      {cameraGeom.FIELD_ANGLE: fieldAngleToFocalPlane})
         detectorList = self._makeDetectorList(fieldAngleToFocalPlane, plateScale)
