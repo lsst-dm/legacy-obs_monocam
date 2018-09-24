@@ -1,14 +1,18 @@
+"""
+Monocam-specific overrides for ProcessCcdTask
+"""
+import os.path
+
+from lsst.utils import getPackageDir
 from lsst.obs.monocam import MonocamIsrTask
+
+obsConfigDir = os.path.join(getPackageDir("obs_monocam"), "config")
+
 config.isr.retarget(MonocamIsrTask)
-config.isr.doDark = True
-config.isr.doBias = True
-config.isr.doFlat = True
-config.isr.doFringe = False
-config.isr.doLinearize = False
+config.isr.load(os.path.join(obsConfigDir, "isr.py"))
 
 config.charImage.repair.doCosmicRay = False
 config.charImage.repair.cosmicray.nCrPixelMax = 1000000
-
 
 config.charImage.background.binSize = 128
 config.charImage.detectAndMeasure.detection.background.binSize = 128
