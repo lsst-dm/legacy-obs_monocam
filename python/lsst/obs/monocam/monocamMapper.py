@@ -166,7 +166,6 @@ class MonocamMapper(CameraMapper):
 
     def std_dark(self, item, dataId):
         exp = self.standardizeCalib("dark", item, dataId)
-        exp.getCalib().setExptime(1.0)
         return exp
 
     def std_flat(self, item, dataId):
