@@ -22,6 +22,8 @@ from builtins import range
 #
 
 import numpy
+
+import lsst.afw.image
 import lsst.ip.isr as ip_isr
 import lsst.pipe.base as pipe_base
 
@@ -111,7 +113,7 @@ class MonocamIsrTask(ip_isr.IsrTask):
         if self.config.doFringe and self.config.fringeAfterFlat:
             self.fringe.run(ccdExposure, **fringes.getDict())
 
-        ccdExposure.getCalib().setFluxMag0(self.config.fluxMag0T1 * ccdExposure.getCalib().getExptime())
+        ccdExposure.setPhotoCalib(lsst.afw.image.makePhotoCalibFromCalibZeroPoint(self.config.fluxMag0T1, 0))
 
         return pipe_base.Struct(
             exposure=ccdExposure,
