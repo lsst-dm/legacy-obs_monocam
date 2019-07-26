@@ -20,14 +20,17 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 import warnings
+
 import numpy
 import lsst.afw.cameraGeom as cameraGeom
 import lsst.geom as geom
 import lsst.afw.geom as afwGeom
-from lsst.afw.table import AmpInfoCatalog, AmpInfoTable, LL
 from lsst.obs.base import MakeRawVisitInfo
 from lsst.afw.coord import Observatory
 from lsst.geom import SpherePoint, degrees
+
+
+__all__ = ["Monocam"]
 
 
 class Monocam(cameraGeom.Camera):
@@ -77,41 +80,56 @@ class Monocam(cameraGeom.Camera):
                  (6, 1): 16.031720,
                  (7, 1): 7.938155}
 
-    def __init__(self):
+    def __new__(cls):
         """Construct a TestCamera
         """
-        plateScale = geom.Angle(13.55, geom.arcseconds)  # plate scale, in angle on sky/mm
+        plateScale = afwGeom.Angle(13.55, afwGeom.arcseconds)  # plate scale, in angle on sky/mm
         radialDistortion = 0.  # radial distortion in mm/rad^2
         radialCoeff = numpy.array((0.0, 1.0, 0.0, radialDistortion)) / plateScale.asRadians()
-        focalPlaneToFieldAngle = afwGeom.makeRadialTransform(radialCoeff)
-        fieldAngleToFocalPlane = focalPlaneToFieldAngle.inverted()
-        cameraTransformMap = cameraGeom.TransformMap(cameraGeom.FOCAL_PLANE,
-                                                     {cameraGeom.FIELD_ANGLE: fieldAngleToFocalPlane})
-        detectorList = self._makeDetectorList(fieldAngleToFocalPlane, plateScale)
-        cameraGeom.Camera.__init__(self, "monocam", detectorList, cameraTransformMap)
+        fieldAngleToFocalPlane = afwGeom.makeRadialTransform(radialCoeff)
+        focalPlaneToFieldAngle = fieldAngleToFocalPlane.inverted()
 
-    def _makeDetectorList(self, focalPlaneToFieldAngle, plateScale):
+        camera = cameraGeom.Camera.Builder("monocam")
+        cls._makeDetectors(camera, focalPlaneToFieldAngle)
+        camera.setTransformFromFocalPlaneTo(cameraGeom.FIELD_ANGLE, focalPlaneToFieldAngle)
+        return camera.finish()
+
+    def __init__(self):
+        pass
+
+    @classmethod
+    def _makeDetectors(cls, camera, focalPlaneToFieldAngle):
         """!Make a list of detectors
 
-        @param[in] focalPlaneToFieldAngle
-            lsst.afw.geom.TransformPoint2ToPoint2
-            from FOCAL_PLANE to FIELD_ANGLE coordinates
-        @param[in] plateScale  plate scale, in angle on sky/mm
-        @return a list of detectors (lsst.afw.cameraGeom.Detector)
+        Parameters
+        ----------
+        camera : `lsst.afw.cameraGeom.camera.Builder`
+            Camera to append detectors to.
+        focalPlaneToFieldAngle : `lsst.afw.geom.TransformPoint2ToPoint2`
+            Transform from ``FOCAL_PLANE`` to ``FIELD_ANGLE`` coordinates
+            in the forward direction.
         """
         warnings.warn("plateScale no longer an argument to cameraGeom.makeDetector. Tread carefully.")
-        detectorList = []
-        detectorConfigList = self._makeDetectorConfigList()
+        detectorConfigList = cls._makeDetectorConfigList()
         for detectorConfig in detectorConfigList:
-            ampInfoCatalog = self._makeAmpInfoCatalog()
-            detector = cameraGeom.makeDetector(detectorConfig, ampInfoCatalog, focalPlaneToFieldAngle)
-            detectorList.append(detector)
-        return detectorList
+            amplifiers = cls._makeAmplifierCatalog()
+            detBuilder = cameraGeom.addDetectorBuilderFromConfig(
+                camera,
+                detectorConfig,
+                amplifiers,
+                focalPlaneToFieldAngle,
+            )
+            if detBuilder is None:
+                raise RuntimeError("Could not add detector!")
 
-    def _makeDetectorConfigList(self):
+    @classmethod
+    def _makeDetectorConfigList(cls):
         """!Make a list of detector configs
 
-        @return a list of detector configs (lsst.afw.cameraGeom.DetectorConfig)
+        Returns
+        -------
+        detectorConfigList : `list` of `lsst.afw.cameraGeom.DetectorConfig`
+           List of detector configs.
         """
         # There is only a single detector assumed perfectly centered and
         # aligned.
@@ -140,8 +158,9 @@ class Monocam(cameraGeom.Camera):
         detector0Config.rollDeg = 0.0
         return [detector0Config]
 
-    def _makeAmpInfoCatalog(self):
-        """Construct an amplifier info catalog
+    @classmethod
+    def _makeAmplifierCatalog(cls):
+        """Construct an amplifier catalog
         """
         # Much of this will need to be filled in when we know it.
         xDataExtent = 512  # trimmed
@@ -162,68 +181,63 @@ class Monocam(cameraGeom.Camera):
         linearityMax = saturation
         linearityCoeffs = [linearityThreshold, linearityMax]
 
-        schema = AmpInfoTable.makeMinimalSchema()
-
-        linThreshKey = schema.addField('linearityThreshold', type=float)
-        linMaxKey = schema.addField('linearityMaximum', type=float)
-        linUnitsKey = schema.addField('linearityUnits', type=str, size=9)
-        # end placeholder
-        self.ampInfoDict = {}
-        ampCatalog = AmpInfoCatalog(schema)
+        ampCatalog = []
         for ampY in (0, 1):
             for ampX in range(8):
-                record = ampCatalog.addNew()
-                record.setName("%d%d" % (ampX, ampY))
+                amplifier = cameraGeom.Amplifier.Builder()
+                amplifier.setName("%d%d" % (ampX, ampY))
 
                 if bool(ampY):
-                    record.setBBox(geom.Box2I(
+                    amplifier.setBBox(geom.Box2I(
                         geom.Point2I(ampX*xDataExtent, ampY*yDataExtent),
                         geom.Extent2I(xDataExtent, yDataExtent),
                     ))
                 else:
-                    record.setBBox(geom.Box2I(
+                    amplifier.setBBox(geom.Box2I(
                         geom.Point2I((7 - ampX)*xDataExtent, ampY*yDataExtent),
                         geom.Extent2I(xDataExtent, yDataExtent),
                     ))
 
-                readCorner = LL  # in raw frames; always LL because raws are in amp coords
+                # in raw frames; always LL because raws are in amp coords
+                readCorner = cameraGeom.ReadoutCorner.LL
                 # bias region
                 x0Bias = extended + xDataExtent
                 y0Data = 0
                 x0Data = extended
 
-                record.setRawBBox(geom.Box2I(
+                amplifier.setRawBBox(geom.Box2I(
                     geom.Point2I(0, 0),
                     geom.Extent2I(xRawExtent, yRawExtent),
                 ))
-                record.setRawDataBBox(geom.Box2I(
+                amplifier.setRawDataBBox(geom.Box2I(
                     geom.Point2I(x0Data, y0Data),
                     geom.Extent2I(xDataExtent, yDataExtent),
                 ))
-                record.setRawHorizontalOverscanBBox(geom.Box2I(
+                amplifier.setRawHorizontalOverscanBBox(geom.Box2I(
                     geom.Point2I(x0Bias, y0Data),
                     geom.Extent2I(h_overscan, yDataExtent),
                 ))
-                record.setRawVerticalOverscanBBox(geom.Box2I(
+                amplifier.setRawVerticalOverscanBBox(geom.Box2I(
                     geom.Point2I(x0Data, y0Data+yDataExtent),
                     geom.Extent2I(xDataExtent, v_overscan),
                 ))
-                record.setRawXYOffset(geom.Extent2I(ampX*xRawExtent, ampY*yRawExtent))
-                record.setReadoutCorner(readCorner)
-                record.setGain(self.gain[(ampX, ampY)])
-                record.setReadNoise(self.readNoise[(ampX, ampY)])
-                record.setSaturation(saturation)
-                record.setHasRawInfo(True)
-                record.setRawFlipX(bool(ampY))
+                amplifier.setRawXYOffset(geom.Extent2I(ampX*xRawExtent, ampY*yRawExtent))
+                amplifier.setReadoutCorner(readCorner)
+                amplifier.setGain(cls.gain[(ampX, ampY)])
+                amplifier.setReadNoise(cls.readNoise[(ampX, ampY)])
+                amplifier.setSaturation(saturation)
+                amplifier.setRawFlipX(bool(ampY))
                 # flip data when assembling if in top of chip
-                record.setRawFlipY(bool(ampY))
-                record.setRawPrescanBBox(geom.Box2I())
+                amplifier.setRawFlipY(bool(ampY))
+                amplifier.setRawPrescanBBox(geom.Box2I())
                 # linearity placeholder stuff
-                record.setLinearityCoeffs([float(val) for val in linearityCoeffs])
-                record.setLinearityType(linearityType)
-                record.set(linThreshKey, float(linearityThreshold))
-                record.set(linMaxKey, float(linearityMax))
-                record.set(linUnitsKey, "DN")
+                amplifier.setLinearityCoeffs([float(val) for val in linearityCoeffs])
+                amplifier.setLinearityType(linearityType)
+                amplifier.setLinearityThreshold(linearityThreshold)
+                amplifier.setLinearityMaximum(linearityMax)
+                amplifier.setLinearityUnits("DN")
+
+                ampCatalog.append(amplifier)
         return ampCatalog
 
 
