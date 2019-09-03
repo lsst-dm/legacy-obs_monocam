@@ -32,7 +32,8 @@ class Monocam(cameraGeom.Camera):
     It has sixteen amplifiers with names like "00".."07" and "10".."17"
 
     Standard keys are:
-    amp: amplifier name: one of 00, 01, 02, 03, 04, 05, 06, 07, 10, 11, 12, 13, 14, 15, 16, 17
+    amp: amplifier name: one of 00, 01, 02, 03, 04, 05, 06, 07, 10, 11, 12,
+                                13, 14, 15, 16, 17
     ccd: ccd name: always 0
     visit: exposure number; this will be provided by the DAQ
     """
@@ -87,7 +88,8 @@ class Monocam(cameraGeom.Camera):
     def _makeDetectorList(self, focalPlaneToFieldAngle, plateScale):
         """!Make a list of detectors
 
-        @param[in] focalPlaneToFieldAngle  lsst.afw.geom.TransformPoint2ToPoint2
+        @param[in] focalPlaneToFieldAngle
+            lsst.afw.geom.TransformPoint2ToPoint2
             from FOCAL_PLANE to FIELD_ANGLE coordinates
         @param[in] plateScale  plate scale, in angle on sky/mm
         @return a list of detectors (lsst.afw.cameraGeom.Detector)
@@ -106,13 +108,15 @@ class Monocam(cameraGeom.Camera):
 
         @return a list of detector configs (lsst.afw.cameraGeom.DetectorConfig)
         """
-        # There is only a single detector assumed perfectly centered and aligned.
+        # There is only a single detector assumed perfectly centered and
+        # aligned.
         detector0Config = cameraGeom.DetectorConfig()
         detector0Config.name = '0'
         detector0Config.id = 0
         detector0Config.serial = 'abcd1234'
         detector0Config.detectorType = 0
-        # This is the orientation we need to put the serial direciton along the x-axis
+        # This is the orientation we need to put the serial direciton along
+        # the x-axis
         detector0Config.bbox_x0 = 0
         detector0Config.bbox_x1 = 4095
         detector0Config.bbox_y0 = 0
@@ -146,7 +150,8 @@ class Monocam(cameraGeom.Camera):
         yRawExtent = v_overscan + yDataExtent  # no prescan in vertical
 
         saturation = 65535
-        # Linearity correction is still under discussion, so this is a placeholder.
+        # Linearity correction is still under discussion, so this is a
+        # placeholder.
         linearityType = "PROPORTIONAL"
         linearityThreshold = 0
         linearityMax = saturation

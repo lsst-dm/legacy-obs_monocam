@@ -41,7 +41,8 @@ class MonocamMapper(CameraMapper):
 
         CameraMapper.__init__(self, policy, policyFile.getRepositoryPath(), **kwargs)
 
-        # Ensure each dataset type of interest knows about the full range of keys available from the registry
+        # Ensure each dataset type of interest knows about the full range of
+        # keys available from the registry
         keys = {'visit': int,
                 'ccd': int,
                 'filter': str,
@@ -56,7 +57,8 @@ class MonocamMapper(CameraMapper):
                      ):
             self.mappings[name].keyDict.update(keys)
 
-        # @merlin, you should swap these out for the filters you actually intend to use.
+        # @merlin, you should swap these out for the filters you actually
+        # intend to use.
         self.filterIdMap = {'u': 0, 'g': 1, 'r': 2, 'i': 3, 'z': 4, 'y': 5}
 
         # The LSST Filters from L. Jones 04/07/10
@@ -96,23 +98,27 @@ class MonocamMapper(CameraMapper):
         return propertyList
 
     def _makeCamera(self, policy, repositoryDir):
-        """Make a camera (instance of lsst.afw.cameraGeom.Camera) describing the camera geometry
+        """Make a camera (instance of lsst.afw.cameraGeom.Camera) describing
+        the camera geometry
         """
         return Monocam()
 
     def bypass_defects(self, datasetType, pythonType, location, dataId):
-        """ since we have no defects, return an empty list.  Fix this when defects exist """
+        """ since we have no defects, return an empty list.  Fix this when
+        defects exist """
         return [afwImage.DefectBase(afwGeom.Box2I(afwGeom.Point2I(x0, y0), afwGeom.Point2I(x1, y1))) for
                 x0, y0, x1, y1 in (
-                    # These may be hot pixels, but we'll treat them as bad until we can get more data
+                    # These may be hot pixels, but we'll treat them as bad
+                    # until we can get more data
                     (3801, 666, 3805, 669),
                     (3934, 582, 3936, 589),
         )]
 
     def _defectLookup(self, dataId):
-        """ This function needs to return a non-None value otherwise the mapper gives up
-        on trying to find the defects.  I wanted to be able to return a list of defects constructed
-        in code rather than reconstituted from persisted files, so I return a dummy value.
+        """ This function needs to return a non-None value otherwise the
+        mapper gives up on trying to find the defects.  I wanted to be able to
+        return a list of defects constructed in code rather than reconstituted
+        from persisted files, so I return a dummy value.
         """
         return "hack"
 
@@ -141,7 +147,8 @@ class MonocamMapper(CameraMapper):
 
         @param dataset  Dataset type (e.g., "bias", "dark" or "flat")
         @param item  The item read by the butler
-        @param dataId  The data identifier (unused, included for future flexibility)
+        @param dataId  The data identifier (unused, included for future
+                       flexibility)
         @return standardized Exposure
         """
         mapping = self.calibrations[dataset]

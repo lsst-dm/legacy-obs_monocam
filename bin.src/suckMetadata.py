@@ -60,6 +60,7 @@ def sexagesimal(keyword, multiplier=1.0):
         return sign*(dd + mm/60.0 + ss/3600.0)*multiplier
     return translator
 
+
 SHUTTER = {
     "date": ('TEXT', lambda md: md.getScalar("DATE-OBS") + "T" + md.getScalar("UTC")),
     "object": ('TEXT', extractor("OBJECT")),
@@ -93,7 +94,8 @@ def createDatabase(root):
     createTable(conn, "camera", CAMERA)
 
     # Join table
-    # conn.execute("CREATE TABLE match (camera INTEGER PRIMARY KEY, shutter INTEGER PRIMARY KEY)")
+    # conn.execute("CREATE TABLE match (camera INTEGER PRIMARY KEY,
+    #                                   shutter INTEGER PRIMARY KEY)")
 
     conn.commit()
     conn.close()
