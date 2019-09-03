@@ -37,9 +37,6 @@ Doing the camera files is not necessary for ingesting and processing
 Monocam data, but it allows you to play around with techniques for
 joining the two tables.
 """
-from __future__ import print_function
-from builtins import map
-
 import os
 from glob import glob
 import sqlite3

@@ -1,4 +1,3 @@
-from __future__ import print_function
 import os
 import re
 from lsst.pipe.tasks.ingest import ParseTask
