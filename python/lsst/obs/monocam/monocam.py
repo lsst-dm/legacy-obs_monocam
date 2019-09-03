@@ -19,6 +19,7 @@
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
+import warnings
 import numpy
 import lsst.afw.cameraGeom as cameraGeom
 import lsst.geom as geom
@@ -95,12 +96,12 @@ class Monocam(cameraGeom.Camera):
         @param[in] plateScale  plate scale, in angle on sky/mm
         @return a list of detectors (lsst.afw.cameraGeom.Detector)
         """
+        warnings.warn("plateScale no longer an argument to cameraGeom.makeDetector. Tread carefully.")
         detectorList = []
         detectorConfigList = self._makeDetectorConfigList()
         for detectorConfig in detectorConfigList:
             ampInfoCatalog = self._makeAmpInfoCatalog()
-            detector = afwGeom.makeDetector(detectorConfig, ampInfoCatalog, focalPlaneToFieldAngle,
-                                            plateScale.asArcseconds())
+            detector = cameraGeom.makeDetector(detectorConfig, ampInfoCatalog, focalPlaneToFieldAngle)
             detectorList.append(detector)
         return detectorList
 
