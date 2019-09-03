@@ -20,13 +20,13 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-
+import os.path
 import lsst.afw.image.utils as afwImageUtils
 import lsst.geom as geom
 import lsst.afw.image as afwImage
 from lsst.afw.fits import readMetadata
 from lsst.obs.base import CameraMapper
-import lsst.pex.policy as pexPolicy
+from lsst.daf.persistence import Policy
 from .monocam import Monocam
 
 __all__ = ["MonocamMapper"]
@@ -36,10 +36,10 @@ class MonocamMapper(CameraMapper):
     packageName = 'obs_monocam'
 
     def __init__(self, inputPolicy=None, **kwargs):
-        policyFile = pexPolicy.DefaultPolicyFile(self.packageName, "monocamMapper.paf", "policy")
-        policy = pexPolicy.Policy(policyFile)
+        policyFile = Policy.DefaultPolicyFile(self.packageName, "monocamMapper.yaml", "policy")
+        policy = Policy(policyFile)
 
-        CameraMapper.__init__(self, policy, policyFile.getRepositoryPath(), **kwargs)
+        CameraMapper.__init__(self, policy, os.path.dirname(policyFile), **kwargs)
 
         # Ensure each dataset type of interest knows about the full range of
         # keys available from the registry
