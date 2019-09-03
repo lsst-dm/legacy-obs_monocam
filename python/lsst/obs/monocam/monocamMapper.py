@@ -22,7 +22,7 @@
 
 
 import lsst.afw.image.utils as afwImageUtils
-import lsst.afw.geom as afwGeom
+import lsst.geom as geom
 import lsst.afw.image as afwImage
 from lsst.afw.fits import readMetadata
 from lsst.obs.base import CameraMapper
@@ -106,7 +106,7 @@ class MonocamMapper(CameraMapper):
     def bypass_defects(self, datasetType, pythonType, location, dataId):
         """ since we have no defects, return an empty list.  Fix this when
         defects exist """
-        return [afwImage.DefectBase(afwGeom.Box2I(afwGeom.Point2I(x0, y0), afwGeom.Point2I(x1, y1))) for
+        return [afwImage.DefectBase(geom.Box2I(geom.Point2I(x0, y0), geom.Point2I(x1, y1))) for
                 x0, y0, x1, y1 in (
                     # These may be hot pixels, but we'll treat them as bad
                     # until we can get more data
