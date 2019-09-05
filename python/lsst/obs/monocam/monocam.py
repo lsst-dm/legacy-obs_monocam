@@ -1,4 +1,3 @@
-from builtins import range
 #
 # LSST Data Management System
 # Copyright 2016 LSST Corporation.
@@ -20,8 +19,10 @@ from builtins import range
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
+import warnings
 import numpy
 import lsst.afw.cameraGeom as cameraGeom
+import lsst.geom as geom
 import lsst.afw.geom as afwGeom
 from lsst.afw.table import AmpInfoCatalog, AmpInfoTable, LL
 
@@ -33,7 +34,8 @@ class Monocam(cameraGeom.Camera):
     It has sixteen amplifiers with names like "00".."07" and "10".."17"
 
     Standard keys are:
-    amp: amplifier name: one of 00, 01, 02, 03, 04, 05, 06, 07, 10, 11, 12, 13, 14, 15, 16, 17
+    amp: amplifier name: one of 00, 01, 02, 03, 04, 05, 06, 07, 10, 11, 12,
+                                13, 14, 15, 16, 17
     ccd: ccd name: always 0
     visit: exposure number; this will be provided by the DAQ
     """
@@ -75,7 +77,7 @@ class Monocam(cameraGeom.Camera):
     def __init__(self):
         """Construct a TestCamera
         """
-        plateScale = afwGeom.Angle(13.55, afwGeom.arcseconds)  # plate scale, in angle on sky/mm
+        plateScale = geom.Angle(13.55, geom.arcseconds)  # plate scale, in angle on sky/mm
         radialDistortion = 0.  # radial distortion in mm/rad^2
         radialCoeff = numpy.array((0.0, 1.0, 0.0, radialDistortion)) / plateScale.asRadians()
         focalPlaneToFieldAngle = afwGeom.makeRadialTransform(radialCoeff)
@@ -88,17 +90,18 @@ class Monocam(cameraGeom.Camera):
     def _makeDetectorList(self, focalPlaneToFieldAngle, plateScale):
         """!Make a list of detectors
 
-        @param[in] focalPlaneToFieldAngle  lsst.afw.geom.TransformPoint2ToPoint2
+        @param[in] focalPlaneToFieldAngle
+            lsst.afw.geom.TransformPoint2ToPoint2
             from FOCAL_PLANE to FIELD_ANGLE coordinates
         @param[in] plateScale  plate scale, in angle on sky/mm
         @return a list of detectors (lsst.afw.cameraGeom.Detector)
         """
+        warnings.warn("plateScale no longer an argument to cameraGeom.makeDetector. Tread carefully.")
         detectorList = []
         detectorConfigList = self._makeDetectorConfigList()
         for detectorConfig in detectorConfigList:
             ampInfoCatalog = self._makeAmpInfoCatalog()
-            detector = afwGeom.makeDetector(detectorConfig, ampInfoCatalog, focalPlaneToFieldAngle,
-                                            plateScale.asArcseconds())
+            detector = cameraGeom.makeDetector(detectorConfig, ampInfoCatalog, focalPlaneToFieldAngle)
             detectorList.append(detector)
         return detectorList
 
@@ -107,13 +110,15 @@ class Monocam(cameraGeom.Camera):
 
         @return a list of detector configs (lsst.afw.cameraGeom.DetectorConfig)
         """
-        # There is only a single detector assumed perfectly centered and aligned.
+        # There is only a single detector assumed perfectly centered and
+        # aligned.
         detector0Config = cameraGeom.DetectorConfig()
         detector0Config.name = '0'
         detector0Config.id = 0
         detector0Config.serial = 'abcd1234'
         detector0Config.detectorType = 0
-        # This is the orientation we need to put the serial direciton along the x-axis
+        # This is the orientation we need to put the serial direciton along
+        # the x-axis
         detector0Config.bbox_x0 = 0
         detector0Config.bbox_x1 = 4095
         detector0Config.bbox_y0 = 0
@@ -147,7 +152,8 @@ class Monocam(cameraGeom.Camera):
         yRawExtent = v_overscan + yDataExtent  # no prescan in vertical
 
         saturation = 65535
-        # Linearity correction is still under discussion, so this is a placeholder.
+        # Linearity correction is still under discussion, so this is a
+        # placeholder.
         linearityType = "PROPORTIONAL"
         linearityThreshold = 0
         linearityMax = saturation
@@ -167,14 +173,14 @@ class Monocam(cameraGeom.Camera):
                 record.setName("%d%d" % (ampX, ampY))
 
                 if bool(ampY):
-                    record.setBBox(afwGeom.Box2I(
-                        afwGeom.Point2I(ampX*xDataExtent, ampY*yDataExtent),
-                        afwGeom.Extent2I(xDataExtent, yDataExtent),
+                    record.setBBox(geom.Box2I(
+                        geom.Point2I(ampX*xDataExtent, ampY*yDataExtent),
+                        geom.Extent2I(xDataExtent, yDataExtent),
                     ))
                 else:
-                    record.setBBox(afwGeom.Box2I(
-                        afwGeom.Point2I((7 - ampX)*xDataExtent, ampY*yDataExtent),
-                        afwGeom.Extent2I(xDataExtent, yDataExtent),
+                    record.setBBox(geom.Box2I(
+                        geom.Point2I((7 - ampX)*xDataExtent, ampY*yDataExtent),
+                        geom.Extent2I(xDataExtent, yDataExtent),
                     ))
 
                 readCorner = LL  # in raw frames; always LL because raws are in amp coords
@@ -183,23 +189,23 @@ class Monocam(cameraGeom.Camera):
                 y0Data = 0
                 x0Data = extended
 
-                record.setRawBBox(afwGeom.Box2I(
-                    afwGeom.Point2I(0, 0),
-                    afwGeom.Extent2I(xRawExtent, yRawExtent),
+                record.setRawBBox(geom.Box2I(
+                    geom.Point2I(0, 0),
+                    geom.Extent2I(xRawExtent, yRawExtent),
                 ))
-                record.setRawDataBBox(afwGeom.Box2I(
-                    afwGeom.Point2I(x0Data, y0Data),
-                    afwGeom.Extent2I(xDataExtent, yDataExtent),
+                record.setRawDataBBox(geom.Box2I(
+                    geom.Point2I(x0Data, y0Data),
+                    geom.Extent2I(xDataExtent, yDataExtent),
                 ))
-                record.setRawHorizontalOverscanBBox(afwGeom.Box2I(
-                    afwGeom.Point2I(x0Bias, y0Data),
-                    afwGeom.Extent2I(h_overscan, yDataExtent),
+                record.setRawHorizontalOverscanBBox(geom.Box2I(
+                    geom.Point2I(x0Bias, y0Data),
+                    geom.Extent2I(h_overscan, yDataExtent),
                 ))
-                record.setRawVerticalOverscanBBox(afwGeom.Box2I(
-                    afwGeom.Point2I(x0Data, y0Data+yDataExtent),
-                    afwGeom.Extent2I(xDataExtent, v_overscan),
+                record.setRawVerticalOverscanBBox(geom.Box2I(
+                    geom.Point2I(x0Data, y0Data+yDataExtent),
+                    geom.Extent2I(xDataExtent, v_overscan),
                 ))
-                record.setRawXYOffset(afwGeom.Extent2I(ampX*xRawExtent, ampY*yRawExtent))
+                record.setRawXYOffset(geom.Extent2I(ampX*xRawExtent, ampY*yRawExtent))
                 record.setReadoutCorner(readCorner)
                 record.setGain(self.gain[(ampX, ampY)])
                 record.setReadNoise(self.readNoise[(ampX, ampY)])
@@ -208,7 +214,7 @@ class Monocam(cameraGeom.Camera):
                 record.setRawFlipX(bool(ampY))
                 # flip data when assembling if in top of chip
                 record.setRawFlipY(bool(ampY))
-                record.setRawPrescanBBox(afwGeom.Box2I())
+                record.setRawPrescanBBox(geom.Box2I())
                 # linearity placeholder stuff
                 record.setLinearityCoeffs([float(val) for val in linearityCoeffs])
                 record.setLinearityType(linearityType)

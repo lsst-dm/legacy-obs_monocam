@@ -37,9 +37,6 @@ Doing the camera files is not necessary for ingesting and processing
 Monocam data, but it allows you to play around with techniques for
 joining the two tables.
 """
-from __future__ import print_function
-from builtins import map
-
 import os
 from glob import glob
 import sqlite3
@@ -62,6 +59,7 @@ def sexagesimal(keyword, multiplier=1.0):
         dd, mm, ss = (float(s) for s in sex.split(":"))
         return sign*(dd + mm/60.0 + ss/3600.0)*multiplier
     return translator
+
 
 SHUTTER = {
     "date": ('TEXT', lambda md: md.getScalar("DATE-OBS") + "T" + md.getScalar("UTC")),
@@ -96,7 +94,8 @@ def createDatabase(root):
     createTable(conn, "camera", CAMERA)
 
     # Join table
-    # conn.execute("CREATE TABLE match (camera INTEGER PRIMARY KEY, shutter INTEGER PRIMARY KEY)")
+    # conn.execute("CREATE TABLE match (camera INTEGER PRIMARY KEY,
+    #                                   shutter INTEGER PRIMARY KEY)")
 
     conn.commit()
     conn.close()

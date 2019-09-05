@@ -14,3 +14,5 @@ tests/.tests
 python/lsst/obs/monocam/version.py
 ups/obs_monocam.cfgc
 bin/
+.coverage
+.pytest_cache

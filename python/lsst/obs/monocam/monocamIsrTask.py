@@ -1,4 +1,3 @@
-from builtins import range
 #
 # LSST Data Management System
 # Copyright 2008-2016 AURA/LSST.
@@ -40,17 +39,18 @@ class MonocamIsrTask(ip_isr.IsrTask):
         - Perform CCD assembly
         - Interpolate over defects, saturated pixels and all NaNs
 
-        \param[in] ccdExposure  -- lsst.afw.image.exposure of detector data
-        \param[in] bias -- exposure of bias frame
-        \param[in] dark -- exposure of dark frame
-        \param[in] flat -- exposure of flatfield
-        \param[in] defects -- list of detects
-        \param[in] fringes -- a pipe_base.Struct with field fringes containing
-                              exposure of fringe frame or list of fringe exposure
-        \param[in] bfKernel -- kernel for brighter-fatter correction
-        \param[in] linearizer -- object for applying linearization
+        @param[in] ccdExposure  -- lsst.afw.image.exposure of detector data
+        @param[in] bias -- exposure of bias frame
+        @param[in] dark -- exposure of dark frame
+        @param[in] flat -- exposure of flatfield
+        @param[in] defects -- list of detects
+        @param[in] fringes -- a pipe_base.Struct with field fringes containing
+                              exposure of fringe frame or list of fringe
+                              exposure
+        @param[in] bfKernel -- kernel for brighter-fatter correction
+        @param[in] linearizer -- object for applying linearization
 
-        \return a pipe_base.Struct with field:
+        @return a pipe_base.Struct with field:
          - exposure
         """
 
@@ -86,13 +86,16 @@ class MonocamIsrTask(ip_isr.IsrTask):
             self.darkCorrection(ccdExposure, dark)
 
         for amp in ccd:
-            # if ccdExposure is one amp, check for coverage to prevent performing ops multiple times
+            # if ccdExposure is one amp, check for coverage to prevent
+            # performing ops multiple times
             if ccdExposure.getBBox().contains(amp.getBBox()):
                 ampExposure = ccdExposure.Factory(ccdExposure, amp.getBBox())
                 self.updateVariance(ampExposure, amp)
 
-        # Don't trust the variance not to be negative (over-subtraction of dark?)
-        # Where it's negative, set it to a robust measure of the variance on the image.
+        # Don't trust the variance not to be negative (over-subtraction of
+        # dark?)
+        # Where it's negative, set it to a robust measure of the variance on
+        # the image.
         variance = ccdExposure.getMaskedImage().getVariance().getArray()
         quartiles = numpy.percentiles(ccdExposure.getMaskedImage().getImage().getArray(), [25.0, 75.0])
         stdev = 0.74*(quartiles[1] - quartiles[0])
@@ -125,11 +128,12 @@ class MonocamIsrTask(ip_isr.IsrTask):
 
         - Read in necessary detrending/isr/calibration data
         - Process raw exposure in run()
-        - Persist the ISR-corrected exposure as "postISRCCD" if config.doWrite is True
+        - Persist the ISR-corrected exposure as "postISRCCD" if config.doWrite
+          is True
 
-        \param[in] sensorRef -- daf.persistence.butlerSubset.ButlerDataRef of the
-                                detector data to be processed
-        \return a pipe_base.Struct with fields:
+        @param[in] sensorRef -- daf.persistence.butlerSubset.ButlerDataRef
+                                of the detector data to be processed
+        @return a pipe_base.Struct with fields:
         - exposure: the exposure after application of ISR
         """
         self.log.info("Performing ISR on sensor %s" % (sensorRef.dataId))
