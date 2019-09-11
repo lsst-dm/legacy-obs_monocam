@@ -8,7 +8,8 @@ setupRequired(pipe_base)
 setupRequired(pipe_tasks)
 setupRequired(ip_isr)
 setupRequired(geom)
-setupOptional(meas_extensions_astrometryNet)
+# FIXME: astrometry_net slated for removal
+# setupOptional(meas_extensions_astrometryNet)
 setupOptional(meas_extensions_psfex)
 
 envPrepend(PYTHONPATH, ${PRODUCT_DIR}/python)
