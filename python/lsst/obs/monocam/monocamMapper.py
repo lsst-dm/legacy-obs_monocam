@@ -38,7 +38,7 @@ class MonocamMapper(CameraMapper):
     MakeRawVisitInfoClass = MakeMonocamRawVisitInfo
 
     def __init__(self, inputPolicy=None, **kwargs):
-        policyFile = Policy.DefaultPolicyFile(self.packageName, "monocamMapper.yaml", "policy")
+        policyFile = Policy.defaultPolicyFile(self.packageName, "monocamMapper.yaml", "policy")
         policy = Policy(policyFile)
 
         CameraMapper.__init__(self, policy, os.path.dirname(policyFile), **kwargs)
