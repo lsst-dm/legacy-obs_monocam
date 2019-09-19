@@ -25,9 +25,8 @@ import unittest
 
 import lsst.utils.tests
 from lsst.utils import getPackageDir
-from lsst.afw.geom import Extent2I
 import lsst.obs.base.tests
-from lsst.geom import SpherePoint, Angle
+from lsst.geom import SpherePoint, Angle, Extent2I
 import astropy.coordinates
 
 

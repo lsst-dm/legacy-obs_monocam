@@ -15,7 +15,7 @@ from lsst.daf.base import DateTime
 from lsst.utils import getPackageDir
 from lsst.afw.image import RotType_UNKNOWN
 from lsst.afw.coord import IcrsCoord, Coord
-from lsst.afw.geom import degrees, Angle
+from lsst.geom import degrees, Angle
 
 import pyfits
 
