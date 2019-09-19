@@ -27,7 +27,9 @@ import lsst.utils.tests
 from lsst.utils import getPackageDir
 from lsst.afw.geom import Extent2I
 import lsst.obs.base.tests
-from lsst.geom import SpherePoint
+from lsst.geom import SpherePoint, Angle
+import astropy.coordinates
+
 
 class TestObsTest(lsst.obs.base.tests.ObsTests, lsst.utils.tests.TestCase):
     def setUp(self):
@@ -42,8 +44,11 @@ class TestObsTest(lsst.obs.base.tests.ObsTests, lsst.utils.tests.TestCase):
         fitsdate = ['2016-05-04T07:37:53.225', '2016-05-05T12:44:09.441', '2016-05-05T03:17:08.930']
         fitsfilter = ['SDSSG', 'OPEN', 'SDSSG']
         exptime = [300.0004, float('nan'), float('nan')]
-        ra = '15:32:09.78'
-        dec = '+13:56:15.6'
+        ra = astropy.coordinates.Angle('15:32:09.78', unit="h")
+        dec = astropy.coordinates.Angle('+13:56:15.6', unit="deg")
+
+        ra = Angle(ra.to_value("rad"))
+        dec = Angle(dec.to_value("rad"))
 
         butler = lsst.daf.persistence.Butler(root=data_dir)
         mapper = lsst.obs.monocam.MonocamMapper(root=data_dir)
