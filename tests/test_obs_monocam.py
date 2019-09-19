@@ -27,7 +27,7 @@ import lsst.utils.tests
 from lsst.utils import getPackageDir
 from lsst.afw.geom import Extent2I
 import lsst.obs.base.tests
-from lsst.afw.coord import IcrsCoord
+from lsst.geom import SpherePoint
 
 class TestObsTest(lsst.obs.base.tests.ObsTests, lsst.utils.tests.TestCase):
     def setUp(self):
@@ -66,7 +66,7 @@ class TestObsTest(lsst.obs.base.tests.ObsTests, lsst.utils.tests.TestCase):
                       'bias': Extent2I(4096, 4004),
                       'flat': Extent2I(4096, 4004)
                       }
-        sky_origin = IcrsCoord(ra, dec)
+        sky_origin = SpherePoint(ra, dec)
         sky_origin = (sky_origin[0].asDegrees(), sky_origin[1].asDegrees())
 
         raw_subsets = (({'filter': fitsfilter[0]}, 1), ({'filter': fitsfilter[0]}, 1), ({'filter': fitsfilter[0]}, 1))
