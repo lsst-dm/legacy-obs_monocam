@@ -27,8 +27,7 @@ import lsst.afw.geom as afwGeom
 from lsst.afw.table import AmpInfoCatalog, AmpInfoTable, LL
 from lsst.obs.base import MakeRawVisitInfo
 from lsst.afw.coord import Observatory
-from lsst.geom import SpherePoint, degrees, Angle
-import astropy.coordinates
+from lsst.geom import SpherePoint, degrees
 
 
 class Monocam(cameraGeom.Camera):
