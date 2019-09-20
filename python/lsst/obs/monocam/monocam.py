@@ -25,6 +25,9 @@ import lsst.afw.cameraGeom as cameraGeom
 import lsst.geom as geom
 import lsst.afw.geom as afwGeom
 from lsst.afw.table import AmpInfoCatalog, AmpInfoTable, LL
+from lsst.obs.base import MakeRawVisitInfo
+from lsst.afw.coord import Observatory
+from lsst.geom import SpherePoint, degrees
 
 
 class Monocam(cameraGeom.Camera):
@@ -222,3 +225,37 @@ class Monocam(cameraGeom.Camera):
                 record.set(linMaxKey, float(linearityMax))
                 record.set(linUnitsKey, "DN")
         return ampCatalog
+
+
+class MakeMonocamRawVisitInfo(MakeRawVisitInfo):
+    """Make a VisitInfo from the FITS header of a raw Monocam image"""
+    observatory = Observatory(-111.740278*degrees, 35.184167*degrees, 2273)  # long, lat, elev
+
+    def setArgDict(self, md, argDict):
+        """Set an argument dict for VisitInfo and pop associated metadata
+        @param[in,out] md  metadata, as an lsst.daf.base.PropertyList or
+                           PropertySet
+        @param[in,out] argdict  a dict of arguments
+        """
+        argDict["exposureTime"] = self.popFloat(md, "EXPTIME")
+        argDict["date"] = self.getDateAvg(md=md, exposureTime=argDict["exposureTime"])
+        try:
+            isRaw = md.get('OBJECT') not in ['DARK', 'FLAT', 'BIAS']
+        except Exception:
+            isRaw = False
+        if isRaw:
+            argDict["darkTime"] = self.popFloat(md, "DARKTIME")
+            argDict["boresightRaDec"] = SpherePoint(
+                self.popAngle(md, "RA", units="h"),
+                self.popAngle(md, "DEC")
+            )
+            argDict["boresightAirmass"] = self.popFloat(md, "AIRMASS")
+            argDict["observatory"] = self.observatory
+
+    def getDateAvg(self, md, exposureTime):
+        """Return date at the middle of the exposure
+        @param[in,out] md  FITS metadata; changed in place
+        @param[in] exposureTime  exposure time in sec
+        """
+        startDate = self.popIsoDate(md, "DATE-OBS", timesys=None)
+        return self.offsetDate(startDate, 0.5*exposureTime)
