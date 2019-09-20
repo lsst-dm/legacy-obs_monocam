@@ -27,7 +27,8 @@ import lsst.afw.geom as afwGeom
 from lsst.afw.table import AmpInfoCatalog, AmpInfoTable, LL
 from lsst.obs.base import MakeRawVisitInfo
 from lsst.afw.coord import Observatory
-from lsst.geom import SpherePoint, degrees
+from lsst.geom import SpherePoint, degrees, Angle
+import astropy.coordinates
 
 
 class Monocam(cameraGeom.Camera):
@@ -246,8 +247,8 @@ class MakeMonocamRawVisitInfo(MakeRawVisitInfo):
         if isRaw:
             argDict["darkTime"] = self.popFloat(md, "DARKTIME")
             argDict["boresightRaDec"] = SpherePoint(
-                self.popAngle(md, "RA_DEG"),
-                self.popAngle(md, "DEC_DEG"),
+                self.popAngle(md, "RA", units="h"),
+                self.popAngle(md, "DEC")
             )
             argDict["boresightAirmass"] = self.popFloat(md, "AIRMASS")
             argDict["observatory"] = self.observatory

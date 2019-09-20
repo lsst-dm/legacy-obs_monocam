@@ -7,15 +7,14 @@ import math
 import os
 import unittest
 import lsst.utils.tests
+import astropy.io.fits
 
 import lsst.daf.persistence as dafPersist
 
 from lsst.daf.base import DateTime
-from lsst.afw.image import RotType_UNKNOWN
-from lsst.afw.coord import IcrsCoord, Coord
-from lsst.geom import degrees, Angle
-
-import pyfits
+from lsst.afw.image import RotType
+from lsst.geom import degrees, Angle, SpherePoint
+import astropy.coordinates
 
 datadir = os.path.join(os.path.dirname(__file__), "data")
 raw = datadir + "/raw/lsst1532+1/SDSSG/2016-05-04lsst1532+13_scienceII_01.fits"  # visit number 33
@@ -27,34 +26,33 @@ fitsvisit, fitsdate, fitsfilter, exptime = [], [], [], []
 
 for fits in fitslist:
     if fits == raw:
-        hdulist = pyfits.open(fits)
-        hdulist.close()
-        prihdr = hdulist[0].header
+        with astropy.io.fits.open(fits) as hdulist:
+            prihdr = hdulist[0].header
         fitsvisit.append(prihdr['VISIT'])
         fitsdate.append(prihdr["DATE-OBS"])
         fitsfilter.append(prihdr["FILTER"])
 
-hdulist = pyfits.open(raw)
-hdulist.close()
-prihdr = hdulist[0].header
+with astropy.io.fits.open(raw) as hdulist:
+    prihdr = hdulist[0].header
 
 nanFloat = float("nan")
 nanAngle = Angle(nanFloat)
 era = nanAngle
 
-boresightRaDec = IcrsCoord(prihdr["RA"], prihdr["DEC"])
 
-prihdr = hdulist[0].header
+boresightRaDec = SpherePoint(Angle(astropy.coordinates.Angle(prihdr["RA"], unit="h").to_value("rad")),
+                             Angle(astropy.coordinates.Angle(prihdr["DEC"], unit="deg").to_value("rad")))
+
 raw_visit_info = {
     "dateAvg": DateTime(prihdr["DATE-OBS"], DateTime.TAI),
     "exposureTime": prihdr["EXPTIME"],
     "darkTime": prihdr["DARKTIME"],
     "era": era,
     "boresightRaDec": boresightRaDec,
-    "boresightAzAlt": Coord(nanAngle, nanAngle),
+    "boresightAzAlt": SpherePoint(nanAngle, nanAngle),
     "boresightAirmass": prihdr["AIRMASS"],
     "boresightRotAngle": nanFloat*degrees,
-    "rotType": RotType_UNKNOWN,
+    "rotType": RotType.UNKNOWN,
     "obs_longitude": -111.740278*degrees,
     "obs_latitude": 35.184167*degrees,
     "obs_elevation": 2273,  # meters
